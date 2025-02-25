@@ -39,5 +39,8 @@
     <a href="{{ route('contractors.index') }}">
         <button>Lihat Semua Kontraktor</button>
     </a>
+    <a href="{{ route('chats.index') }}">
+        <button>Lihat Chat Saya</button>
+    </a>
 </body>
 </html>

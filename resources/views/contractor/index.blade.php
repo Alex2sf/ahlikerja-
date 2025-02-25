@@ -29,6 +29,12 @@
                     <p>Tidak ada foto profil.</p>
                 @endif
                 <p>Perusahaan: {{ $contractor->contractorProfile->perusahaan ?? 'Tidak diisi' }}</p>
+
+                @if (Auth::check())
+                    <a href="{{ route('chats.show', $contractor->id) }}">
+                        <button>Chat</button>
+                    </a>
+                @endif
                 <hr>
             </div>
         @endforeach

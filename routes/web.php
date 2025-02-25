@@ -5,9 +5,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContractorProfileController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ChatController;
 
 Route::middleware('auth')->group(function () {
     // Routes untuk profil user biasa
+    Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
+    Route::get('/chats/{receiverId}', [ChatController::class, 'show'])->name('chats.show');
+    Route::post('/chats/{receiverId}', [ChatController::class, 'store'])->name('chats.store');
+
     Route::get('/user/{id}/profile', [ProfileController::class, 'showPublic'])->name('user.profile.show');
     Route::get('/contractors', [ContractorProfileController::class, 'index'])->name('contractors.index');
     // Routes untuk profil kontraktor
