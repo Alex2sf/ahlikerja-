@@ -18,6 +18,19 @@
         <a href="{{ route('contractor.profile.edit') }}">
             <button>Edit Profil Kontraktor</button>
         </a>
+        <a href="{{ route('orders.index') }}">
+            <button>Lihat Keranjang Pemesanan</button>
+        </a>
+        <a href="{{ route('bookings.index') }}">
+            <button>Lihat Pesanan Saya</button>
+        </a>
+        <a href="{{ route('subscriptions.create') }}">
+            <button>Berlangganan untuk Melihat Postingan (Rp1/Bulan)</button>
+        </a>
+    @elseif (auth()->user()->role === 'admin')
+        <a href="{{ route('admin.contractors.index') }}">
+            <button>Kelola Kontraktor</button>
+        </a>
     @else
         <a href="{{ route('profile.show') }}">
             <button>Lihat Profil</button>
@@ -25,14 +38,20 @@
         <a href="{{ route('profile.edit') }}">
             <button>Edit Profil</button>
         </a>
+        <a href="{{ route('posts.create') }}">
+            <button>Buat Postingan Tugas</button>
+        </a>
+        <a href="{{ route('posts.index') }}">
+            <button>Lihat Postingan Saya</button>
+        </a>
+        <a href="{{ route('orders.index') }}">
+            <button>Lihat Keranjang Pemesanan</button>
+        </a>
+        <a href="{{ route('bookings.index') }}">
+            <button>Lihat Pesanan Saya</button>
+        </a>
     @endif
 
-    <a href="{{ route('posts.create') }}">
-        <button>Buat Postingan Tugas</button>
-    </a>
-    <a href="{{ route('posts.index') }}">
-        <button>Lihat Postingan Saya</button>
-    </a>
     <a href="{{ route('posts.all') }}">
         <button>Lihat Semua Postingan</button>
     </a>

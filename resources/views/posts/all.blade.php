@@ -52,6 +52,14 @@
                 @endif
                 <p>Dibuat pada: {{ $post->created_at->format('d F Y') }}</p>
 
+                <!-- Tombol "Berikan Penawaran" untuk kontraktor -->
+                @if (Auth::check() && Auth::user()->role === 'kontraktor' && Auth::user()->id !== $post->user_id)
+                    <form action="{{ route('offers.store', $post->id) }}" method="POST">
+                        @csrf
+                        <button type="submit">Berikan Penawaran</button>
+                    </form>
+                @endif
+
                 <!-- Like -->
                 <p>Jumlah Like: {{ $post->likes->count() }}</p>
                 <form action="{{ route('posts.like', $post->id) }}" method="POST">
@@ -112,6 +120,13 @@
                         @method('DELETE')
                         <button type="submit" onclick="return confirm('Yakin ingin menghapus postingan ini?')">Hapus</button>
                     </form>
+                @endif
+
+                <!-- Tombol "Lihat Penawaran" untuk user pemilik postingan -->
+                @if (Auth::check() && Auth::user()->id === $post->user_id)
+                    <a href="{{ route('offers.index', $post->id) }}">
+                        <button>Lihat Penawaran</button>
+                    </a>
                 @endif
             </div>
             <hr>

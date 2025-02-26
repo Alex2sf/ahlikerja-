@@ -6,8 +6,33 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContractorProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\AdminContractorController;
+use App\Http\Controllers\OfferController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\SubscriptionController;
 
 Route::middleware('auth')->group(function () {
+    // Routes untuk subscription
+    Route::get('/subscriptions/create', [SubscriptionController::class, 'create'])->name('subscriptions.create');
+    Route::post('/subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::post('/subscriptions/callback', [SubscriptionController::class, 'callback'])->name('subscriptions.callback');
+    Route::get('/subscriptions/success', [SubscriptionController::class, 'success'])->name('subscriptions.success');
+    Route::get('/subscriptions/failed', [SubscriptionController::class, 'failed'])->name('subscriptions.failed');
+
+    // Routes lainnya...
+    Route::get('/bookings/contractor/{contractorId}/create', [BookingController::class, 'create'])->name('bookings.create');
+    Route::post('/bookings/contractor/{contractorId}', [BookingController::class, 'store'])->name('bookings.store');
+    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::post('/bookings/{bookingId}/status', [BookingController::class, 'updateStatus'])->name('bookings.updateStatus');
+    // Routes untuk orders
+    Route::post('/orders/from-offer/{offerId}', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/posts/{postId}/offer', [OfferController::class, 'store'])->name('offers.store');
+    Route::get('/posts/{postId}/offers', [OfferController::class, 'index'])->name('offers.index');
+    Route::post('/offers/{offerId}/accept', [OfferController::class, 'accept'])->name('offers.accept');
+    Route::get('/admin/contractors', [AdminContractorController::class, 'index'])->name('admin.contractors.index');
+    Route::post('/admin/contractors/{id}/approve', [AdminContractorController::class, 'approve'])->name('admin.contractors.approve');
     // Routes untuk profil user biasa
     Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
     Route::get('/chats/{receiverId}', [ChatController::class, 'show'])->name('chats.show');

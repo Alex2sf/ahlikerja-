@@ -81,6 +81,11 @@
             <p>Tidak ada portofolio.</p>
         @endif
     </div>
+    @if (Auth::check())
+        <a href="{{ route('chats.show', $user->id) }}">
+            <button>Chat</button>
+        </a>
+    @endif
 
     <a href="{{ route('home') }}">Kembali ke Home</a>
 </body>

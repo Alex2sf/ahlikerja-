@@ -107,7 +107,12 @@ class ContractorProfileController extends Controller
     }
     public function index()
     {
-        $contractors = \App\Models\User::where('role', 'kontraktor')->with('contractorProfile')->get();
+        $contractors = \App\Models\User::where('role', 'kontraktor')
+                                      ->with('contractorProfile')
+                                      ->whereHas('contractorProfile', function ($query) {
+                                          $query->where('approved', true);
+                                      })
+                                      ->get();
         return view('contractor.index', compact('contractors'));
     }
 }

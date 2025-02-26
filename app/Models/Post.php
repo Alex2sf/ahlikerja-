@@ -14,7 +14,6 @@ class Post extends Model
         'gambar' => 'array',
         'estimasi_anggaran' => 'decimal:2'
     ];
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -28,5 +27,9 @@ class Post extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+    public function offers()
+    {
+        return $this->hasMany(Offer::class);
     }
 }

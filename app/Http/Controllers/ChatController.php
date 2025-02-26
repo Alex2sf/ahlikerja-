@@ -66,7 +66,6 @@ class ChatController extends Controller
 
         return view('chat.show', compact('chats', 'sender', 'receiver'));
     }
-
     public function store(Request $request, $receiverId)
     {
         $sender = Auth::user();

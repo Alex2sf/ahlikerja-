@@ -30,7 +30,10 @@
                 @endif
                 <p>Perusahaan: {{ $contractor->contractorProfile->perusahaan ?? 'Tidak diisi' }}</p>
 
-                @if (Auth::check())
+                @if (Auth::check() && Auth::user()->role === 'user')
+                    <a href="{{ route('bookings.create', $contractor->id) }}">
+                        <button>Pesan</button>
+                    </a>
                     <a href="{{ route('chats.show', $contractor->id) }}">
                         <button>Chat</button>
                     </a>

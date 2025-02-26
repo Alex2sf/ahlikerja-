@@ -54,4 +54,25 @@ class User extends Authenticatable
     {
         return $this->hasMany(Chat::class, 'receiver_id');
     }
+    public function offers()
+    {
+        return $this->hasMany(Offer::class, 'contractor_id');
+    }
+    public function contractorOrders()
+    {
+        return $this->hasMany(Order::class, 'contractor_id');
+    }
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'user_id');
+    }
+
+    public function contractorBookings()
+    {
+        return $this->hasMany(Booking::class, 'contractor_id');
+    }
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class, 'contractor_id');
+    }
 }
