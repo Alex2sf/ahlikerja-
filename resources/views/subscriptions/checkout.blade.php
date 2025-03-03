@@ -9,8 +9,8 @@
     <button id="pay-button">Bayar dengan Midtrans</button>
     <pre><div id="result-json">Hasil transaksi akan muncul di sini:<br></div></pre>
 
-    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
-    <script type="text/javascript">
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>    <script type="text/javascript">
+
         document.getElementById('pay-button').onclick = function() {
             snap.pay('{{ $snapToken }}', {
                 onSuccess: function(result) {

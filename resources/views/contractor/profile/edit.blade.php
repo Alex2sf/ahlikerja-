@@ -64,14 +64,37 @@
         <div>
             <label>Portofolio (unggah multiple):</label>
             <input type="file" name="portofolio[]" multiple>
-            @if ($profile->portofolio)
+
+            @if (!empty($profile->portofolio) && count($profile->portofolio) > 0)
                 <ul>
                     @foreach ($profile->portofolio as $port)
-                        <li><a href="{{ Storage::url('contractors/portfolios/' . $port) }}" target="_blank">{{ $port }}</a></li>
+                        <li>
+                            <a href="{{ Storage::url('contractors/portfolios/' . $port) }}" target="_blank">{{ $port }}</a>
+                        </li>
                     @endforeach
                 </ul>
             @endif
         </div>
+
+        <!-- Tambahan: Gambar Data Diri -->
+        <div>
+            <label>Gambar Data Diri (unggah multiple, minimal 2):</label>
+            <input type="file" name="identity_images[]" multiple>
+
+            @if (!empty($profile->identity_images) && count($profile->identity_images) > 0)
+                <h3>Gambar Data Diri Saat Ini:</h3>
+                <ul>
+                    @foreach ($profile->identity_images as $image)
+                        <li>
+                            <a href="{{ Storage::url($image) }}" target="_blank">
+                                <img src="{{ Storage::url($image) }}" width="150" alt="Gambar Data Diri" style="margin: 5px;">
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
         <button type="submit">Simpan</button>
     </form>
     <a href="{{ route('home') }}">Kembali ke Home</a>

@@ -16,22 +16,35 @@
         @foreach ($postOrders as $order)
             <div>
                 <h3>Postingan: {{ $order->post->judul }}</h3>
-                <p>Kontraktor:
-                    <a href="{{ route('contractor.profile.showPublic', $order->contractor->id) }}">
-                        {{ $order->contractor->name }}
-                        @if ($order->contractor->contractorProfile && $order->contractor->contractorProfile->nama_panggilan)
-                            ({{ $order->contractor->contractorProfile->nama_panggilan }})
-                        @endif
-                    </a>
-                </p>
-                @if ($order->contractor->contractorProfile && $order->contractor->contractorProfile->foto_profile)
-                    <a href="{{ route('contractor.profile.showPublic', $order->contractor->id) }}">
-                        <img src="{{ Storage::url('contractors/' . $order->contractor->contractorProfile->foto_profile) }}" width="50" alt="Foto Profil">
-                    </a>
+                <p>Kontraktor: <a href="{{ route('contractor.profile.showPublic', $order->contractor->id) }}">{{ $order->contractor->name }}</a></p>
+                <p>Status: {{ $order->is_completed ? 'Selesai' : 'Belum Selesai' }}</p>
+
+                @if (!$order->is_completed)
+                    <form action="{{ route('orders.complete', $order->id) }}" method="POST" style="display:inline;">
+                        @csrf
+                        <button type="submit" onclick="return confirm('Tandai pemesanan ini selesai?')">Selesai</button>
+                    </form>
+                @elseif (!$order->review)
+                    <form action="{{ route('orders.review', $order->id) }}" method="POST">
+                        @csrf
+                        <label>Rating (1-5):</label>
+                        <select name="rating" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        <br>
+                        <label>Ulasan:</label>
+                        <textarea name="review" placeholder="Tulis ulasan Anda..." rows="3"></textarea>
+                        <br>
+                        <button type="submit">Kirim Ulasan</button>
+                    </form>
+                @else
+                    <p>Rating: {{ $order->review->rating }}/5</p>
+                    <p>Ulasan: {{ $order->review->review ?? 'Tidak ada ulasan' }}</p>
                 @endif
-                <p>Lokasi: {{ $order->post->lokasi }}</p>
-                <p>Durasi: {{ $order->post->durasi }}</p>
-                <p>Dibuat pada: {{ $order->created_at->format('d F Y') }}</p>
                 <hr>
             </div>
         @endforeach
@@ -44,33 +57,35 @@
         @foreach ($bookingOrders as $bookingOrder)
             <div>
                 <h3>Judul Pesanan: {{ $bookingOrder->judul }}</h3>
-                <p>Deskripsi: {{ $bookingOrder->deskripsi }}</p>
-                @if ($bookingOrder->gambar && count($bookingOrder->gambar) > 0)
-                    <h4>Gambar:</h4>
-                    <div>
-                        @foreach ($bookingOrder->gambar as $gambar)
-                            <img src="{{ Storage::url('bookings/' . $gambar) }}" width="150" alt="Gambar Pesanan">
-                        @endforeach
-                    </div>
+                <p>Kontraktor: <a href="{{ route('contractor.profile.showPublic', $bookingOrder->contractor->id) }}">{{ $bookingOrder->contractor->name }}</a></p>
+                <p>Status: {{ $bookingOrder->is_completed ? 'Selesai' : 'Belum Selesai' }}</p>
+
+                @if (!$bookingOrder->is_completed)
+                    <form action="{{ route('bookings.complete', $bookingOrder->id) }}" method="POST" style="display:inline;">
+                        @csrf
+                        <button type="submit" onclick="return confirm('Tandai pemesanan ini selesai?')">Selesai</button>
+                    </form>
+                @elseif (!$bookingOrder->review)
+                    <form action="{{ route('orders.review', $bookingOrder->id) }}" method="POST">
+                        @csrf
+                        <label>Rating (1-5):</label>
+                        <select name="rating" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        <br>
+                        <label>Ulasan:</label>
+                        <textarea name="review" placeholder="Tulis ulasan Anda..." rows="3"></textarea>
+                        <br>
+                        <button type="submit">Kirim Ulasan</button>
+                    </form>
+                @else
+                    <p>Rating: {{ $bookingOrder->review->rating }}/5</p>
+                    <p>Ulasan: {{ $bookingOrder->review->review ?? 'Tidak ada ulasan' }}</p>
                 @endif
-                <p>Lokasi: {{ $bookingOrder->lokasi }}</p>
-                <p>Estimasi Anggaran: Rp {{ number_format($bookingOrder->estimasi_anggaran, 2, ',', '.') }}</p>
-                <p>Durasi: {{ $bookingOrder->durasi }}</p>
-                <p>Kontraktor:
-                    <a href="{{ route('contractor.profile.showPublic', $bookingOrder->contractor->id) }}">
-                        {{ $bookingOrder->contractor->name }}
-                        @if ($bookingOrder->contractor->contractorProfile && $bookingOrder->contractor->contractorProfile->nama_panggilan)
-                            ({{ $bookingOrder->contractor->contractorProfile->nama_panggilan }})
-                        @endif
-                    </a>
-                </p>
-                @if ($bookingOrder->contractor->contractorProfile && $bookingOrder->contractor->contractorProfile->foto_profile)
-                    <a href="{{ route('contractor.profile.showPublic', $bookingOrder->contractor->id) }}">
-                        <img src="{{ Storage::url('contractors/' . $bookingOrder->contractor->contractorProfile->foto_profile) }}" width="50" alt="Foto Profil">
-                    </a>
-                @endif
-                <p>Status: {{ $bookingOrder->status }}</p>
-                <p>Dibuat pada: {{ $bookingOrder->created_at->format('d F Y') }}</p>
                 <hr>
             </div>
         @endforeach

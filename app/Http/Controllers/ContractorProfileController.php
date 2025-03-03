@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\User;
 
 use App\Models\ContractorProfile;
 use Illuminate\Http\Request;
@@ -9,6 +10,19 @@ use Illuminate\Support\Facades\Storage;
 
 class ContractorProfileController extends Controller
 {
+
+    public function welcome()
+{
+    // Ambil kontraktor yang sudah disetujui (approved = true)
+    $contractors = User::where('role', 'kontraktor')
+                       ->with('contractorProfile')
+                       ->whereHas('contractorProfile', function ($query) {
+                           $query->where('approved', true);
+                       })
+                       ->get();
+
+    return view('welcome', compact('contractors'));
+}
    public function edit()
     {
         $profile = Auth::user()->contractorProfile ?? new ContractorProfile();
@@ -16,77 +30,73 @@ class ContractorProfileController extends Controller
     }
 
     public function update(Request $request)
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        $request->validate([
-            'foto_profile' => 'nullable|image|max:2048',
-            'nama_depan' => 'required|string|max:255',
-            'nama_belakang' => 'required|string|max:255',
-            'nomor_telepon' => 'nullable|string|max:15',
-            'alamat' => 'nullable|string',
-            'perusahaan' => 'required|string|max:255',
-            'nomor_npwp' => 'required|string|max:255',
-            'bidang_usaha.*' => 'nullable|string|max:255', // Validasi untuk array bidang usaha
-            'dokumen_pendukung' => 'nullable|array',
-            'dokumen_pendukung.*' => 'file|max:20480', // Maks 20MB per file
-            'portofolio' => 'nullable|array',
-            'portofolio.*' => 'file|max:20480' // Maks 20MB per file
-        ]);
+    $request->validate([
+        'foto_profile' => 'nullable|image|max:2048',
+        'nama_depan' => 'required|string|max:255',
+        'nama_belakang' => 'required|string|max:255',
+        'nomor_telepon' => 'nullable|string|max:15',
+        'alamat' => 'nullable|string',
+        'perusahaan' => 'required|string|max:255',
+        'nomor_npwp' => 'required|string|max:255',
+        'bidang_usaha.*' => 'nullable|string|max:255',
+        'dokumen_pendukung.*' => 'nullable|file|max:2048',
+        'portofolio.*' => 'nullable|file|max:2048',
+        'identity_images.*' => 'nullable|image|max:2048', // Validasi untuk gambar data diri
+    ]);
 
-        $data = $request->only([
-            'nama_depan', 'nama_belakang', 'nomor_telepon', 'alamat',
-            'perusahaan', 'nomor_npwp'
-        ]);
+    $data = $request->only([
+        'nama_depan', 'nama_belakang', 'nomor_telepon', 'alamat',
+        'perusahaan', 'nomor_npwp',
+    ]);
 
-    // Handle foto profile
+    // Handle foto profil
     if ($request->hasFile('foto_profile')) {
-        if ($user->contractorProfile && $user->contractorProfile->foto_profile) {
-            Storage::disk('public')->delete('contractors/' . $user->contractorProfile->foto_profile);
-        }
-        $fileName = time() . '.' . $request->foto_profile->extension();
-        $request->file('foto_profile')->storeAs('contractors', $fileName, 'public');
-        $data['foto_profile'] = $fileName;
+        $fotoProfilPath = $request->file('foto_profile')->store('foto_profil', 'public');
+        $data['foto_profile'] = $fotoProfilPath;
     }
 
-        // Handle bidang usaha (maks 10)
-        $bidangUsaha = array_filter($request->input('bidang_usaha', []));
-        $data['bidang_usaha'] = array_slice($bidangUsaha, 0, 10); // Batasi hingga 10 item
+    // Handle bidang usaha
+    $data['bidang_usaha'] = array_filter($request->input('bidang_usaha', []));
 
-    // Handle dokumen pendukung (multiple files)
+    // Handle dokumen pendukung
     if ($request->hasFile('dokumen_pendukung')) {
-        $dokumenPaths = [];
+        $dokumenPendukung = [];
         foreach ($request->file('dokumen_pendukung') as $file) {
-            $fileName = time() . '_' . uniqid() . '.' . $file->extension();
-            $file->storeAs('contractors/documents', $fileName, 'public');
-            $dokumenPaths[] = $fileName;
+            $dokumenPendukung[] = $file->store('contractors/documents', 'public');
         }
-        $data['dokumen_pendukung'] = $dokumenPaths;
+        $data['dokumen_pendukung'] = $dokumenPendukung;
     }
 
-
-        // Handle portofolio (multiple files)
-        if ($request->hasFile('portofolio')) {
-            $portofolioPaths = [];
-            foreach ($request->file('portofolio') as $file) {
-                $fileName = time() . '_' . uniqid() . '.' . $file->extension();
-                $file->storeAs('contractors/portfolios', $fileName, 'public');
-                $portofolioPaths[] = $fileName;
-            }
-            $data['portofolio'] = $portofolioPaths;
+    // Handle portofolio
+    if ($request->hasFile('portofolio')) {
+        $portofolio = [];
+        foreach ($request->file('portofolio') as $file) {
+            $portofolio[] = $file->store('contractors/portfolios', 'public');
         }
-
-
-        if ($user->contractorProfile) {
-            $user->contractorProfile->update($data);
-        } else {
-            $data['user_id'] = $user->id;
-            ContractorProfile::create($data);
-        }
-
-        return redirect()->back()->with('success', 'Profil kontraktor berhasil diperbarui!');
+        $data['portofolio'] = $portofolio;
     }
 
+    // Handle identity images (gambar data diri)
+    if ($request->hasFile('identity_images')) {
+        $identityImages = [];
+        foreach ($request->file('identity_images') as $image) {
+            $identityImages[] = $image->store('contractors/identity', 'public');
+        }
+        $data['identity_images'] = $identityImages;
+    }
+
+    if ($user->contractorProfile) {
+        $user->contractorProfile->update($data);
+    } else {
+        $data['user_id'] = $user->id;
+        ContractorProfile::create($data);
+    }
+
+    return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
+}
     public function show()
     {
         $profile = Auth::user()->contractorProfile;

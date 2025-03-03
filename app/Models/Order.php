@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    protected $fillable = ['user_id', 'contractor_id', 'post_id', 'offer_id'];
-
+    protected $fillable = ['user_id', 'contractor_id', 'post_id', 'offer_id', 'is_completed'];
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -27,4 +26,15 @@ class Order extends Model
     {
         return $this->belongsTo(Offer::class);
     }
+
+    public function review()
+    {
+        return $this->hasOne(Review::class, 'order_id');
+    }
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class, 'booking_id'); // Sesuaikan foreign key
+    }
+
 }

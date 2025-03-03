@@ -6,6 +6,7 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -77,19 +78,19 @@ class BookingController extends Controller
         $user = Auth::user();
         if ($user->role === 'user') {
             $bookings = Booking::where('user_id', $user->id)
-                             ->with('contractor.contractorProfile')
-                             ->get();
+                              ->with('contractor.contractorProfile')
+                              ->get();
             return view('bookings.index', compact('bookings'));
         } elseif ($user->role === 'kontraktor') {
             $bookings = Booking::where('contractor_id', $user->id)
-                             ->with('user.profile')
-                             ->get();
+                              ->with('user.profile')
+                              ->get();
+            Log::info('Bookings fetched for contractor', ['user_id' => $user->id, 'bookings' => $bookings->toArray()]);
             return view('bookings.contractor', compact('bookings'));
         }
 
         return redirect()->route('home')->with('error', 'Role tidak valid.');
     }
-
     public function updateStatus(Request $request, $bookingId)
 {
     $booking = Booking::findOrFail($bookingId);
@@ -106,23 +107,6 @@ class BookingController extends Controller
 
     $booking->update(['status' => $request->status]);
 
-    // Jika pesanan diterima, tambahkan ke keranjang pemesanan user
-    if ($request->status === 'accepted') {
-        // Pastikan tidak ada duplikat di keranjang (meskipun ini jarang terjadi karena status sudah unique)
-        if (!\App\Models\Order::where('user_id', $booking->user_id)
-                             ->where('contractor_id', $booking->contractor_id)
-                             ->where('post_id', null) // Pastikan tidak ada post_id untuk bookings langsung
-                             ->whereHas('booking', function ($query) use ($booking) {
-                                 $query->where('id', $booking->id);
-                             })->exists()) {
-            \App\Models\Order::create([
-                'user_id' => $booking->user_id,
-                'contractor_id' => $booking->contractor_id,
-                'post_id' => null, // Tidak ada postingan terkait, ini adalah booking langsung
-                'offer_id' => null // Tidak ada offer terkait, ini adalah booking langsung
-            ]);
-        }
-    }
 
     // Notifikasi untuk user
     $notification = $request->status === 'accepted'
@@ -130,5 +114,27 @@ class BookingController extends Controller
         : 'Pesanan Anda telah ditolak oleh kontraktor.';
 
     return redirect()->route('bookings.index')->with('success', $notification);
+}
+
+public function complete(Request $request, $bookingId)
+{
+    Log::info('Complete button clicked for Booking', ['booking_id' => $bookingId, 'user_id' => Auth::id()]);
+
+    $booking = Booking::findOrFail($bookingId);
+
+    if ($booking->user_id !== Auth::id()) {
+        Log::warning('Unauthorized attempt to complete booking', ['booking_id' => $bookingId, 'user_id' => Auth::id()]);
+        return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menandai pemesanan ini selesai.');
+    }
+
+    $updated = $booking->update(['is_completed' => true]);
+    Log::info('Booking update attempted', ['booking_id' => $bookingId, 'updated' => $updated]);
+
+    if ($updated) {
+        return redirect()->back()->with('success', 'Pemesanan telah ditandai selesai. Silakan beri rating dan ulasan.');
+    } else {
+        Log::error('Failed to update booking', ['booking_id' => $bookingId]);
+        return redirect()->back()->with('error', 'Gagal menandai pemesanan selesai.');
+    }
 }
 }

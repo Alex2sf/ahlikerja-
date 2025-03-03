@@ -38,6 +38,83 @@
                     @endif
                 </p>
 
+                <!-- Dokumen Pendukung -->
+                @if ($contractor->dokumen_pendukung && count($contractor->dokumen_pendukung) > 0)
+                    <div class="mb-3">
+                        <strong>Dokumen Pendukung:</strong>
+                        <ul>
+                            @foreach ($contractor->dokumen_pendukung as $dokumen)
+                                <li>
+                                    @php
+                                        $extension = pathinfo($dokumen, PATHINFO_EXTENSION);
+                                        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                                    @endphp
+                                    @if (in_array(strtolower($extension), $imageExtensions))
+                                        <a href="{{ Storage::url('contractors/documents/' . $dokumen) }}" target="_blank">
+                                            <img src="{{ Storage::url('contractors/documents/' . $dokumen) }}" width="150" alt="Dokumen Pendukung" style="margin: 5px;">
+                                        </a>
+                                    @else
+                                        <a href="{{ Storage::url('contractors/documents/' . $dokumen) }}" target="_blank">
+                                            {{ $dokumen }}
+                                        </a>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <!-- Gambar Data Diri -->
+                @if (!empty($contractor->identity_images) && count($contractor->identity_images) > 0)
+                <div class="mb-3">
+                    <strong>Gambar Data Diri:</strong>
+                    <ul>
+                        @foreach ($contractor->identity_images as $image)
+                            @php
+                                $url = Storage::url($image);
+                                $extension = strtolower(pathinfo($image, PATHINFO_EXTENSION));
+                                $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                            @endphp
+                            <li>
+                                <a href="{{ $url }}" target="_blank">
+                                    @if (in_array($extension, $imageExtensions))
+                                        <img src="{{ $url }}" width="150" alt="Gambar Data Diri" style="margin: 5px;">
+                                    @else
+                                        {{ basename($image) }}
+                                    @endif
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+                <!-- Portofolio -->
+                @if ($contractor->portofolio && count($contractor->portofolio) > 0)
+                    <div class="mb-3">
+                        <strong>Portofolio:</strong>
+                        <ul>
+                            @foreach ($contractor->portofolio as $port)
+                                <li>
+                                    @php
+                                        $extension = pathinfo($port, PATHINFO_EXTENSION);
+                                        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                                    @endphp
+                                    @if (in_array(strtolower($extension), $imageExtensions))
+                                        <a href="{{ Storage::url('contractors/portfolios/' . $port) }}" target="_blank">
+                                            <img src="{{ Storage::url('contractors/portfolios/' . $port) }}" width="150" alt="Portofolio" style="margin: 5px;">
+                                        </a>
+                                    @else
+                                        <a href="{{ Storage::url('contractors/portfolios/' . $port) }}" target="_blank">
+                                            {{ $port }}
+                                        </a>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('admin.contractors.approve', $contractor->id) }}" method="POST">
                     @csrf
                     <label>

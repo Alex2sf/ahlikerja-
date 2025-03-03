@@ -9,7 +9,7 @@
         <div>{{ session('info') }}</div>
     @endif
 
-<h1 class="mb-4">Profil Kontraktor</h1>
+    <h1 class="mb-4">Profil Kontraktor</h1>
 
     <div class="card">
         <div class="card-body">
@@ -77,34 +77,38 @@
                 </div>
             @endif
 
-          <!-- Portofolio -->
-@if($profile->portofolio && count($profile->portofolio) > 0)
-<div class="mb-3">
-    <strong>Portofolio:</strong>
-    <ul>
-        @foreach($profile->portofolio as $portofolio)
-            <li>
-                @php
-                    // Ambil ekstensi file
-                    $extension = pathinfo($portofolio, PATHINFO_EXTENSION);
-                    // Daftar ekstensi gambar yang didukung
-                    $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                @endphp
+            <!-- Portofolio -->
+            @if($profile->portofolio && count($profile->portofolio) > 0)
+                <div class="mb-3">
+                    <strong>Portofolio:</strong>
+                    <ul>
+                        @if ($profile->portofolio)
+                        <ul>
+                            @foreach ($profile->portofolio as $port)
+                                <li><a href="{{ Storage::url('contractors/portfolios/' . $port) }}" target="_blank">{{ $port }}</a></li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    </ul>
+                </div>
+            @endif
 
-                @if(in_array(strtolower($extension), $imageExtensions))
-                    <!-- Tampilkan gambar langsung -->
-                    <img src="{{ Storage::url('storage/contractors/portfolios/' . $portofolio) }}" alt="{{ $portofolio }}" style="max-width: 200px; max-height: 200px;">
-                @else
-                    <!-- Tampilkan link untuk file non-gambar -->
-                    <a href="{{ Storage::url('storage/contractors/portfolios/' . $portofolio) }}" target="_blank">
-                        {{ $portofolio }}
-                    </a>
+            <!-- Gambar Data Diri -->
+            @if($profile->identity_images && count($profile->identity_images) > 0)
+                <div class="mb-3">
+                    {{-- <strong>Gambar Data Diri:</strong> --}}
+                    {{-- @if (!empty($profile->identity_images) && count($profile->identity_images) > 0) --}}
+                    <h3>Gambar Data Diri Saat Ini:</h3>
+                    <ul>
+                        @foreach ($profile->identity_images as $image)
+                            <li>
+                                <a href="{{ Storage::url($image) }}" target="_blank">
+                                    <img src="{{ Storage::url($image) }}" width="150" alt="Gambar Data Diri" style="margin: 5px;">
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
                 @endif
-            </li>
-        @endforeach
-    </ul>
-</div>
-@endif
 
             <!-- Tombol Edit -->
             <div class="text-center mt-4">

@@ -81,6 +81,28 @@
             <p>Tidak ada portofolio.</p>
         @endif
     </div>
+
+    <div>
+        <h2>Rating dan Ulasan</h2>
+        @php
+            $reviews = $profile->user->reviews; // Relasi reviews di model User
+            $averageRating = $reviews->avg('rating');
+        @endphp
+        @if ($reviews->isEmpty())
+            <p>Belum ada ulasan.</p>
+        @else
+            <p>Rating Rata-rata: {{ number_format($averageRating, 1) }}/5 ({{ $reviews->count() }} ulasan)</p>
+            <ul>
+                @foreach ($reviews as $review)
+                    <li>
+                        <p>Rating: {{ $review->rating }}/5</p>
+                        <p>Ulasan: {{ $review->review ?? 'Tidak ada ulasan' }}</p>
+                        <p>Oleh: <a href="{{ route('user.profile.show', $review->user->id) }}">{{ $review->user->name }}</a></p>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
     @if (Auth::check())
         <a href="{{ route('chats.show', $user->id) }}">
             <button>Chat</button>

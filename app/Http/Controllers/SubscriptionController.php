@@ -13,17 +13,15 @@ use Illuminate\Support\Facades\Log;
 
 class SubscriptionController extends Controller
 {
+
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware(function ($request, $next) {
-            if (Auth::user()->role !== 'kontraktor') {
-                return redirect()->route('home')->with('error', 'Hanya kontraktor yang dapat berlangganan.');
-            }
-            return $next($request);
-        });
+        // Set konfigurasi Midtrans
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production', false);
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
     }
-
     public function create()
     {
         $contractor = Auth::user();
@@ -34,18 +32,19 @@ class SubscriptionController extends Controller
     {
         $contractor = Auth::user();
 
-        // Konfigurasi Midtrans
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$clientKey = config('midtrans.client_key');
-        Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized = config('midtrans.is_sanitized');
-        Config::$is3ds = config('midtrans.is_3ds');
+        // Validasi request
+        $request->validate([
+            'plan_id' => 'required', // Hanya cek apakah ada, tanpa validasi exists
+        ]);
+
+        // Buat order_id unik
+        $orderId = 'SUBS-' . uniqid() . '-' . $contractor->id;
 
         // Parameter transaksi untuk Midtrans
         $params = [
             'transaction_details' => [
-                'order_id' => 'SUBS-' . time() . '-' . $contractor->id,
-                'gross_amount' => 1, // Rp1
+                'order_id' => $orderId,
+                'gross_amount' => 1, // Rp1 (untuk testing)
             ],
             'customer_details' => [
                 'first_name' => $contractor->name,
@@ -61,76 +60,131 @@ class SubscriptionController extends Controller
             ]
         ];
 
-        // Dapatkan Snap Token dari Midtrans
-        $snapToken = Snap::getSnapToken($params);
-
-        // Simpan subscription sementara (belum aktif sampai pembayaran dikonfirmasi)
-        $subscription = Subscription::create([
-            'contractor_id' => $contractor->id,
-            'start_date' => now(),
-            'end_date' => null,
-            'transaction_id' => $params['transaction_details']['order_id'],
-            'is_active' => false,
-
-        ]);
-
-        return view('subscriptions.checkout', compact('snapToken', 'subscription'));
-    }
-
-    public function callback(Request $request)
-    {
-        $serverKey = config('midtrans.server_key');
-        $orderId = $request->order_id;
-        $statusCode = $request->status_code;
-        $grossAmount = $request->gross_amount;
-
-        Log::info('Midtrans callback received', [
-            'order_id' => $orderId,
-            'status_code' => $statusCode,
-            'gross_amount' => $grossAmount
-        ]);
-
-        // Verifikasi status transaksi menggunakan Midtrans
-        $response = json_decode(json_encode(\Midtrans\Transaction::status($orderId)));
-
-        Log::info('Midtrans transaction status', ['response' => $response]);
-
-        if ($response->transaction_status == 'settlement' && $response->gross_amount == $grossAmount) {
-            $subscription = Subscription::where('transaction_id', $orderId)->first();
-
-            if ($subscription) {
-                Log::info('Subscription found:', ['subscription' => $subscription]);
-
-                $subscription->update([
-                    'is_active' => true,
-                    'end_date' => now()->addMonth()
-                ]);
-
-                // Fetch ulang untuk memastikan update berhasil
-                $updatedSubscription = Subscription::where('transaction_id', $orderId)->first();
-
-                Log::info('Updated subscription:', [
-                    'is_active' => $updatedSubscription->is_active,
-                    'end_date' => $updatedSubscription->end_date
-                ]);
-
-                return response()->json(['status' => 'success']);
-            } else {
-                Log::warning('Subscription not found for order_id:', ['order_id' => $orderId]);
+        // Dapatkan Snap Token dari Midtrans dengan handling error yang lebih detail
+        try {
+            // Pastikan konfigurasi Midtrans sudah benar sebelum request
+            if (empty(Config::$serverKey)) {
+                throw new \Exception('Midtrans server key is not configured. Please check your .env file.');
             }
-        } else {
-            Log::warning('Transaction not settled or amount mismatch', [
+
+            $snapToken = Snap::getSnapToken($params);
+
+            // Log sukses mendapatkan snap token
+            Log::info('Midtrans Snap Token Generated Successfully:', [
                 'order_id' => $orderId,
-                'transaction_status' => $response->transaction_status,
-                'expected_amount' => $grossAmount,
-                'received_amount' => $response->gross_amount
+                'snap_token' => $snapToken
             ]);
+
+        } catch (\Exception $e) {
+            // Log error dengan detail lengkap, termasuk response dari Midtrans
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+            $errorResponse = $e->getResponse() ? $e->getResponse()->getBody()->getContents() : 'No response';
+
+            Log::error('Midtrans Snap Token Error:', [
+                'message' => $errorMessage,
+                'code' => $errorCode,
+                'response' => $errorResponse,
+                'order_id' => $orderId
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Gagal membuat transaksi: ' . $errorMessage)
+                ->withInput();
         }
 
-        return response()->json(['status' => 'failed'], 400);
+        // Simpan subscription sementara (belum aktif sampai pembayaran dikonfirmasi)
+        try {
+            $subscription = Subscription::create([
+                'contractor_id' => $contractor->id,
+                'start_date' => now(),
+                'end_date' => null,
+                'transaction_id' => $orderId,
+                'is_active' => false,
+                'status' => 'pending'
+            ]);
+
+            // Log sukses menyimpan subscription
+            Log::info('Subscription Created Successfully:', [
+                'subscription_id' => $subscription->id,
+                'order_id' => $orderId
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Subscription Creation Error:', [
+                'message' => $e->getMessage(),
+                'order_id' => $orderId
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Gagal menyimpan data berlangganan. Silakan coba lagi.')
+                ->withInput();
+        }
+
+        // Redirect ke halaman checkout dengan snap token dan subscription
+        return view('subscriptions.checkout', compact('snapToken', 'subscription'));
+    }
+    public function callback(Request $request)
+{
+    // Buat instance notifikasi Midtrans
+    $notif = new \Midtrans\Notification();
+    // Ambil data transaksi dari notifikasi
+    $transactionStatus = $notif->transaction_status;
+    $orderId = $notif->order_id;
+    $paymentType = $notif->payment_type;
+    $fraudStatus = $notif->fraud_status;
+
+    // Cari subscription berdasarkan order_id
+    $subscription = Subscription::where('transaction_id', $orderId)->first();
+
+    if (!$subscription) {
+        Log::warning('Subscription not found for order_id:', ['order_id' => $orderId]);
+        return response()->json(['status' => 'error', 'message' => 'Subscription not found'], 404);
     }
 
+    // Handle status transaksi
+    if ($transactionStatus == 'capture') {
+        if ($paymentType == 'credit_card') {
+            if ($fraudStatus == 'challenge') {
+                // Transaksi dalam proses challenge
+                $subscription->update(['status' => 'challenge']);
+            } else {
+                // Transaksi berhasil
+                $subscription->update([
+                    'is_active' => true,
+                    'end_date' => now()->addMonth(),
+                    'status' => 'active'
+                ]);
+            }
+        }
+    } elseif ($transactionStatus == 'settlement') {
+        // Transaksi berhasil
+        $subscription->update([
+            'is_active' => true,
+            'end_date' => now()->addMonth(),
+            'status' => 'active'
+        ]);
+    } elseif ($transactionStatus == 'pending') {
+        // Transaksi masih pending
+        $subscription->update(['status' => 'pending']);
+    } elseif ($transactionStatus == 'deny' || $transactionStatus == 'expire' || $transactionStatus == 'cancel') {
+        // Transaksi gagal
+        $subscription->update([
+            'is_active' => false,
+            'status' => $transactionStatus
+        ]);
+    }
 
+    // Log hasil pembaruan
+    Log::info('Subscription updated:', [
+        'order_id' => $orderId,
+        'status' => $subscription->status,
+        'is_active' => $subscription->is_active,
+        'end_date' => $subscription->end_date
+    ]);
+
+    return response()->json(['status' => 'success']);
+}
     public function success()
     {
         return view('subscriptions.success');
@@ -145,13 +199,15 @@ class SubscriptionController extends Controller
     {
         $contractor = Auth::user();
         $subscription = Subscription::where('contractor_id', $contractor->id)
-                                  ->where('is_active', true)
-                                  ->orderBy('end_date', 'desc')
-                                  ->first();
+                                    ->where('is_active', true)
+                                    ->where('end_date', '>', now())
+                                    ->orderBy('end_date', 'desc')
+                                    ->first();
 
-        if ($subscription && $subscription->end_date > now()) {
-            return true; // Berlangganan aktif
+        if ($subscription) {
+            return response()->json(['status' => 'active', 'end_date' => $subscription->end_date]);
         }
-        return false; // Berlangganan tidak aktif atau expired
+
+        return response()->json(['status' => 'inactive']);
     }
 }

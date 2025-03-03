@@ -14,9 +14,11 @@ use App\Http\Controllers\SubscriptionController;
 
 Route::middleware('auth')->group(function () {
     // Routes untuk subscription
+    Route::post('/orders/{orderId}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+    Route::post('/bookings/{bookingId}/complete', [BookingController::class, 'complete'])->name('bookings.complete');
+    Route::post('/orders/{orderId}/review', [OrderController::class, 'storeReview'])->name('orders.review');
     Route::get('/subscriptions/create', [SubscriptionController::class, 'create'])->name('subscriptions.create');
     Route::post('/subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
-    Route::post('/subscriptions/callback', [SubscriptionController::class, 'callback'])->name('subscriptions.callback');
     Route::get('/subscriptions/success', [SubscriptionController::class, 'success'])->name('subscriptions.success');
     Route::get('/subscriptions/failed', [SubscriptionController::class, 'failed'])->name('subscriptions.failed');
 
@@ -35,8 +37,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/contractors/{id}/approve', [AdminContractorController::class, 'approve'])->name('admin.contractors.approve');
     // Routes untuk profil user biasa
     Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
-    Route::get('/chats/{receiverId}', [ChatController::class, 'show'])->name('chats.show');
+    Route::get('/chats/{receiverId?}', [ChatController::class, 'index'])->name('chats.index');
     Route::post('/chats/{receiverId}', [ChatController::class, 'store'])->name('chats.store');
+
 
     Route::get('/user/{id}/profile', [ProfileController::class, 'showPublic'])->name('user.profile.show');
     Route::get('/contractors', [ContractorProfileController::class, 'index'])->name('contractors.index');
@@ -74,6 +77,5 @@ Route::middleware('auth')->group(function () {
         return view('home');
     })->name('home'); // Tambahkan nama route 'home'
 });
-Route::get('/', function () {
-    return view('welcome');
-});
+
+Route::get('/', [ContractorProfileController::class, 'welcome'])->name('welcome');
