@@ -5,9 +5,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\Post;
 use App\Models\Like;
 use App\Models\Comment;
-
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 class User extends Authenticatable
 {
+
+    use LogsActivity;
     protected $fillable = [
         'name', 'email', 'password', 'role'
     ];
@@ -15,6 +18,14 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'role'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) => "User {$this->name} telah {$eventName}");
+    }
 
     public function setPasswordAttribute($value)
     {

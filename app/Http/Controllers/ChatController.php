@@ -24,14 +24,24 @@ class ChatController extends Controller
                         });
 
         $receiver = $receiverId ? User::findOrFail($receiverId) : null;
-        $selectedChats = $receiver ? Chat::where(function ($query) use ($user, $receiver) {
-                                            $query->where('sender_id', $user->id)
-                                                  ->where('receiver_id', $receiver->id)
-                                                  ->orWhere('sender_id', $receiver->id)
-                                                  ->where('receiver_id', $user->id);
-                                        })
-                                        ->orderBy('created_at', 'asc')
-                                        ->get() : collect();
+        $selectedChats = collect();
+
+        if ($receiver) {
+            $selectedChats = Chat::where(function ($query) use ($user, $receiver) {
+                                        $query->where('sender_id', $user->id)
+                                              ->where('receiver_id', $receiver->id)
+                                              ->orWhere('sender_id', $receiver->id)
+                                              ->where('receiver_id', $user->id);
+                                    })
+                                    ->orderBy('created_at', 'asc')
+                                    ->get();
+
+            // Tandai semua pesan dari receiver sebagai sudah dibaca
+            Chat::where('receiver_id', $user->id)
+                ->where('sender_id', $receiver->id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+        }
 
         return view('chat.index', compact('chats', 'receiver', 'selectedChats'));
     }

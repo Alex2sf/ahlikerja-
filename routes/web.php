@@ -11,9 +11,19 @@ use App\Http\Controllers\OfferController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\RecommendationController;
+use App\Http\Controllers\DashboardController;
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::patch('/admin/contractors/{id}/approve', [DashboardController::class, 'approve'])->name('admin.contractors.approve');
+    Route::patch('/admin/contractors/{id}/reject', [DashboardController::class, 'reject'])->name('admin.contractors.reject');
+    Route::get('/admin/contractors/{id}', [DashboardController::class, 'show'])->name('admin.contractors.show'); // Belum diimplementasikan
+    Route::get('/admin/bookings/{id}', [DashboardController::class, 'showBooking'])->name('admin.bookings.show'); // Detail booking
+    Route::get('/admin/bookings', [DashboardController::class, 'indexBookings'])->name('admin.bookings.index'); // Daftar semua booking
     // Routes untuk subscription
+    Route::get('/recommendations', [RecommendationController::class, 'getRecommendations'])->name('recommendations.index');
     Route::post('/orders/{orderId}/complete', [OrderController::class, 'complete'])->name('orders.complete');
     Route::post('/bookings/{bookingId}/complete', [BookingController::class, 'complete'])->name('bookings.complete');
     Route::post('/orders/{orderId}/review', [OrderController::class, 'storeReview'])->name('orders.review');
@@ -30,16 +40,16 @@ Route::middleware('auth')->group(function () {
     // Routes untuk orders
     Route::post('/orders/from-offer/{offerId}', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/posts/{postId}/offer', [OfferController::class, 'store'])->name('offers.store');
     Route::get('/posts/{postId}/offers', [OfferController::class, 'index'])->name('offers.index');
     Route::post('/offers/{offerId}/accept', [OfferController::class, 'accept'])->name('offers.accept');
+    Route::post('/posts/{postId}/offers', [OfferController::class, 'store'])->name('offers.store');
     Route::get('/admin/contractors', [AdminContractorController::class, 'index'])->name('admin.contractors.index');
     Route::post('/admin/contractors/{id}/approve', [AdminContractorController::class, 'approve'])->name('admin.contractors.approve');
     // Routes untuk profil user biasa
     Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
     Route::get('/chats/{receiverId?}', [ChatController::class, 'index'])->name('chats.index');
     Route::post('/chats/{receiverId}', [ChatController::class, 'store'])->name('chats.store');
-
+    Route::delete('/contractor/profile/delete/{type}/{index}', [ContractorProfileController::class, 'deleteFile'])->name('contractor.profile.delete');
 
     Route::get('/user/{id}/profile', [ProfileController::class, 'showPublic'])->name('user.profile.show');
     Route::get('/contractors', [ContractorProfileController::class, 'index'])->name('contractors.index');
@@ -54,6 +64,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/posts/{id}', [PostController::class, 'destroy'])->name('posts.destroy');
     Route::post('/posts/{id}/like', [PostController::class, 'like'])->name('posts.like');
     Route::post('/posts/{id}/comment', [PostController::class, 'comment'])->name('posts.comment');
+
+
 });
 Route::middleware('auth')->group(function () {
     Route::get('/contractor/profile', [ContractorProfileController::class, 'show'])->name('contractor.profile.show');

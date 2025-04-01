@@ -48,17 +48,16 @@ class BookingController extends Controller
 
         $data = $request->only(['judul', 'deskripsi', 'lokasi', 'estimasi_anggaran', 'durasi']);
 
-        // Handle gambar (multiple files)
+        // Handle gambar (multiple files) dengan disk 'public'
         if ($request->hasFile('gambar')) {
             $gambarPaths = [];
             foreach ($request->file('gambar') as $file) {
                 $fileName = time() . '_' . uniqid() . '.' . $file->extension();
-                $file->storeAs('public/bookings', $fileName);
-                $gambarPaths[] = $fileName;
+                $path = Storage::disk('public')->putFileAs('bookings', $file, $fileName); // Simpan ke storage/app/public/bookings
+                $gambarPaths[] = $path; // Path akan seperti 'bookings/namafile.jpg'
             }
             $data['gambar'] = $gambarPaths;
         }
-
         Booking::create([
             'user_id' => $user->id,
             'contractor_id' => $contractor->id,
@@ -79,11 +78,13 @@ class BookingController extends Controller
         if ($user->role === 'user') {
             $bookings = Booking::where('user_id', $user->id)
                               ->with('contractor.contractorProfile')
+                              ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
                               ->get();
             return view('bookings.index', compact('bookings'));
         } elseif ($user->role === 'kontraktor') {
             $bookings = Booking::where('contractor_id', $user->id)
                               ->with('user.profile')
+                              ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
                               ->get();
             Log::info('Bookings fetched for contractor', ['user_id' => $user->id, 'bookings' => $bookings->toArray()]);
             return view('bookings.contractor', compact('bookings'));

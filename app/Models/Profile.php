@@ -8,7 +8,7 @@ class Profile extends Model
 {
     protected $fillable = [
         'user_id', 'foto_profile', 'nama_lengkap', 'nama_panggilan', 'jenis_kelamin',
-        'tanggal_lahir', 'tempat_lahir', 'alamat_lengkap', 'nomor_telepon', 'email', 'media_sosial'
+        'tanggal_lahir', 'tempat_lahir', 'alamat_lengkap', 'nomor_telepon', 'email', 'media_sosial','bio'
     ];
 
     protected $casts = [

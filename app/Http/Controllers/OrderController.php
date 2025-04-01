@@ -45,19 +45,20 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         if ($user->role === 'user') {
-            // Pemesanan dari postingan (orders)
             $postOrders = Order::where('user_id', $user->id)
                               ->with('contractor.contractorProfile', 'post')
+                              ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
                               ->get();
-            // Pemesanan langsung ke kontraktor (bookings dengan status accepted)
             $bookingOrders = Booking::where('user_id', $user->id)
                                   ->with('contractor.contractorProfile')
                                   ->where('status', 'accepted')
+                                  ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
                                   ->get();
             return view('orders.index', compact('postOrders', 'bookingOrders'));
         } elseif ($user->role === 'kontraktor') {
             $orders = Order::where('contractor_id', $user->id)
                           ->with('user.profile', 'post')
+                          ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
                           ->get();
             return view('orders.contractor', compact('orders'));
         }
