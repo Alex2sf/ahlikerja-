@@ -39,7 +39,8 @@
 
             <!-- Informasi Profil -->
             <div class="profile-details">
-                <h2>{{ $profile->nama_depan }} {{ $profile->nama_belakang }}</h2>
+                <p><strong>Perusahaan:</strong> {{ $profile->perusahaan }}</p>
+
                 <p><strong>Bio:</strong> {{ $profile->bio ?: 'Tidak ada bio' }}</p>
 
                 @if ($profile->nomor_telepon)
@@ -50,7 +51,6 @@
                     <p><strong>Alamat:</strong> {{ $profile->alamat }}</p>
                 @endif
 
-                <p><strong>Perusahaan:</strong> {{ $profile->perusahaan }}</p>
                 <p><strong>Nomor NPWP:</strong> {{ $profile->nomor_npwp }}</p>
 
                 <!-- Bidang Usaha -->

@@ -159,6 +159,105 @@
             cursor: pointer;
         }
 
+        /* Notification Bell */
+    .notification-bell {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .notification-bell i {
+        font-size: 20px;
+    }
+
+    .notification-count {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #dc3545;
+        color: #fff;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 50%;
+        line-height: 1;
+    }
+
+    .notification-dropdown {
+        max-height: 300px;
+        overflow-y: auto;
+        width: 300px;
+        right: 0;
+        left: auto;
+    }
+
+    .notification-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e0d8c9;
+        transition: background-color 0.3s ease;
+    }
+
+    .notification-item.unread {
+        background-color: #f8d7da;
+    }
+
+    .notification-item.read {
+        background-color: #fff;
+    }
+
+    .notification-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .notification-item p {
+        margin: 0;
+        font-size: 14px;
+        color: #5a3e36;
+    }
+
+    .notification-item small {
+        display: block;
+        color: #6b5848;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .no-notification {
+        padding: 12px 16px;
+        text-align: center;
+        color: #6b5848;
+        font-size: 14px;
+    }
+
+    .mark-all-read {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        color: #a8c3b8;
+        font-size: 14px;
+        text-decoration: none;
+        border-top: 1px solid #e0d8c9;
+    }
+
+    .mark-all-read:hover {
+        background-color: #f5f5f5;
+    }
+
+    /* Menu Toggle (for mobile) */
+    .menu-toggle {
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .menu-toggle span {
+        width: 25px;
+        height: 3px;
+        background-color: #fff;
+        transition: all 0.3s ease;
+    }
+
         /* Responsive Design untuk Navbar */
         @media (max-width: 768px) {
             .nav {

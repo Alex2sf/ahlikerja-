@@ -46,6 +46,26 @@
                             <p class="order-detail"><strong>Lokasi:</strong> {{ $order->post->lokasi }}</p>
                             <p class="order-detail"><strong>Durasi:</strong> {{ $order->post->durasi }}</p>
                             <p class="order-detail"><strong>Dibuat pada:</strong> {{ $order->created_at->format('d F Y') }}</p>
+                            <p class="order-detail"><strong>Status:</strong>
+                                <span class="status {{ $order->is_completed ? 'completed' : 'pending' }}">
+                                    {{ $order->is_completed ? 'Selesai' : 'Belum Selesai' }}
+                                </span>
+                            </p>
+
+                            <!-- Tampilkan Bukti Pembayaran jika ada -->
+                            @if ($order->is_completed && $order->review)
+                                <div class="review-details">
+                                    <p class="order-detail"><strong>Rating:</strong> {{ $order->review->rating }}/5</p>
+                                    <p class="order-detail"><strong>Ulasan:</strong> {{ $order->review->review ?? 'Tidak ada ulasan' }}</p>
+                                    @if ($order->review->pembayaran)
+                                        <p class="order-detail"><strong>Bukti Pembayaran:</strong></p>
+                                        <img src="{{ Storage::url($order->review->pembayaran) }}" alt="Bukti Pembayaran" class="payment-image">
+                                    @else
+                                        <p class="order-detail"><strong>Bukti Pembayaran:</strong> Tidak ada bukti pembayaran.</p>
+                                    @endif
+                                </div>
+                            @endif
+
                             <div class="decoration-line"></div>
                         </div>
                     @endforeach
@@ -171,11 +191,51 @@
             color: #555;
         }
 
+        .user-name a {
+            color: #5a3e36;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .user-name a:hover {
+            text-decoration: underline;
+            color: #a8c3b8;
+        }
+
         .order-detail {
             font-family: 'Roboto', sans-serif;
             font-size: 14px;
             color: #5a3e36;
             margin-bottom: 10px;
+        }
+
+        .status {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        /* Review Details */
+        .review-details {
+            margin-top: 10px;
+        }
+
+        .payment-image {
+            max-width: 150px;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 5px;
         }
 
         /* Decoration Line */
@@ -256,6 +316,10 @@
 
             .order-detail {
                 font-size: 13px;
+            }
+
+            .payment-image {
+                max-width: 100px;
             }
 
             .btn {

@@ -33,9 +33,9 @@
 
             <!-- Informasi Profil -->
             <div class="profile-details">
-                <h2>{{ $profile->nama_depan }} {{ $profile->nama_belakang }}</h2>
-                <p><strong>Bio:</strong> {{ $profile->bio ?? 'Tidak diisi' }}</p>
                 <p><strong>Perusahaan:</strong> {{ $profile->perusahaan ?? 'Tidak diisi' }}</p>
+
+                <p><strong>Bio:</strong> {{ $profile->bio ?? 'Tidak diisi' }}</p>
 
                 <!-- Bidang Usaha -->
                 @if ($profile->bidang_usaha && count($profile->bidang_usaha) > 0)

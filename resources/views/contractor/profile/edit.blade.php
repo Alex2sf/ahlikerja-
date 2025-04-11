@@ -39,20 +39,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="nama_depan">Nama Depan:</label>
-                    <input type="text" name="nama_depan" id="nama_depan" value="{{ old('nama_depan', $profile->nama_depan) }}" required>
-                    @error('nama_depan')
+                    <label for="perusahaan">Perusahaan:</label>
+                    <input type="text" name="perusahaan" id="perusahaan" value="{{ old('perusahaan', $profile->perusahaan) }}" required>
+                    @error('perusahaan')
                         <span class="error">{{ $message }}</span>
                     @enderror
                 </div>
 
-                <div class="form-group">
-                    <label for="nama_belakang">Nama Belakang:</label>
-                    <input type="text" name="nama_belakang" id="nama_belakang" value="{{ old('nama_belakang', $profile->nama_belakang) }}" required>
-                    @error('nama_belakang')
-                        <span class="error">{{ $message }}</span>
-                    @enderror
-                </div>
 
                 <div class="form-group">
                     <label for="nomor_telepon">Nomor Telepon:</label>
@@ -72,13 +65,7 @@
                     @enderror
                 </div>
 
-                <div class="form-group">
-                    <label for="perusahaan">Perusahaan:</label>
-                    <input type="text" name="perusahaan" id="perusahaan" value="{{ old('perusahaan', $profile->perusahaan) }}" required>
-                    @error('perusahaan')
-                        <span class="error">{{ $message }}</span>
-                    @enderror
-                </div>
+
 
                 <div class="form-group">
                     <label for="nomor_npwp">Nomor NPWP:</label>
@@ -135,7 +122,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="identity_images">Gambar Data Diri (unggah multiple):</label>
+                    <label for="identity_images">GAMBAR DATA DIRI (unggah multiple):</label>
                     <input type="file" name="identity_images[]" id="identity_images" multiple>
                     {{-- @if ($profile->identity_images && count($profile->identity_images) > 0)
                         <h4>Gambar Data Diri Saat Ini:</h4>

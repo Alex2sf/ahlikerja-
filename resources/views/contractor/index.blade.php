@@ -50,9 +50,8 @@
                             </div>
                             <h2>
                                 <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}" class="contractor-link">
-                                    {{ $contractor->name }}
-                                    @if ($contractor->contractorProfile && $contractor->contractorProfile->nama_panggilan)
-                                        ({{ $contractor->contractorProfile->nama_panggilan }})
+                                    @if ($contractor->contractorProfile && $contractor->contractorProfile->perusahaan)
+                                        {{ $contractor->contractorProfile->perusahaan }}
                                     @endif
                                 </a>
                             </h2>
@@ -67,7 +66,6 @@
                                     {{ number_format($averageRating, 1) }}/5 ({{ $reviews->count() }} ulasan)
                                 @endif
                             </p>
-                            <p><strong>Perusahaan:</strong> {{ $contractor->contractorProfile->perusahaan ?? 'Tidak diisi' }}</p>
                             <p><strong>Lokasi:</strong> {{ $contractor->contractorProfile->alamat ?? 'Tidak diisi' }}</p>
                             <p><strong>Bidang Usaha:</strong>
                                 @if ($contractor->contractorProfile && $contractor->contractorProfile->bidang_usaha && count($contractor->contractorProfile->bidang_usaha) > 0)

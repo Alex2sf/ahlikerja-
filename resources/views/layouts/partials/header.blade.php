@@ -1,3 +1,10 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahli Kerja</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+</head>
 <header class="header">
     <div class="container">
         <div class="logo">
@@ -29,7 +36,6 @@
                     <li><a href="{{ route('admin.dashboard') }}">Dashboard Admin</a></li>
                     <li><a href="{{ route('contractors.index') }}">Kontraktor</a></li>
                     <li><a href="{{ route('posts.all') }}">Postingan</a></li>
-
                 @else
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn">Profil▼</a>
@@ -55,7 +61,7 @@
                     </li>
                 @endif
                 @if (auth()->user()->role !== 'kontraktor' && auth()->user()->role !== 'admin')
-                                    <li class="dropdown">
+                    <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn">Kontraktor▼</a>
                         <div class="dropdown-content">
                             <a href="{{ route('contractors.index') }}">Lihat Semua Kontraktor</a>
@@ -64,6 +70,28 @@
                     </li>
                 @endif
                 <li><a href="{{ route('chats.index') }}">Lihat Chat Saya</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropbtn notification-bell">
+                        <i class="fas fa-bell"></i>
+                        @if (auth()->user()->unreadNotifications->count() > 0)
+                            <span class="notification-count">{{ auth()->user()->unreadNotifications->count() }}</span>
+                        @endif
+                    </a>
+                    <div class="dropdown-content notification-dropdown">
+                        @if (auth()->user()->notifications->isEmpty())
+                            <p class="no-notification">Tidak ada notifikasi.</p>
+                        @else
+                            @foreach (auth()->user()->notifications as $notification)
+                                <a href="{{ $notification->data['url'] }}" class="notification-item {{ $notification->read_at ? 'read' : 'unread' }}"
+                                   data-id="{{ $notification->id }}">
+                                    <p>{{ $notification->data['message'] }}</p>
+                                    <small>{{ $notification->created_at->diffForHumans() }}</small>
+                                </a>
+                            @endforeach
+                            <a href="javascript:void(0)" class="mark-all-read">Tandai semua sebagai dibaca</a>
+                        @endif
+                    </div>
+                </li>
                 <form method="POST" action="{{ route('logout') }}" class="logout-form">
                     @csrf
                     <button type="submit">Logout</button>
@@ -77,3 +105,55 @@
         </div>
     </div>
 </header>
+<script>
+    // Toggle menu on mobile
+    document.getElementById('menuToggle').addEventListener('click', function () {
+        document.getElementById('nav').classList.toggle('active');
+        this.classList.toggle('active');
+    });
+
+    // Mark notification as read when clicked
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', function () {
+            const notificationId = this.getAttribute('data-id');
+            fetch(`/notifications/${notificationId}/read`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                },
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    this.classList.remove('unread');
+                    this.classList.add('read');
+                    const countElement = document.querySelector('.notification-count');
+                    const currentCount = parseInt(countElement.textContent) - 1;
+                    if (currentCount > 0) {
+                        countElement.textContent = currentCount;
+                    } else {
+                        countElement.remove();
+                    }
+                }
+            });
+        });
+    });
+
+    // Mark all notifications as read
+    document.querySelector('.mark-all-read')?.addEventListener('click', function () {
+        fetch('/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json()).then(data => {
+            if (data.success) {
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                });
+                document.querySelector('.notification-count')?.remove();
+            }
+        });
+    });
+</script>

@@ -13,9 +13,12 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
+
 
 Route::middleware('auth')->group(function () {
-
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->middleware('auth');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->middleware('auth');
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::patch('/admin/contractors/{id}/approve', [DashboardController::class, 'approve'])->name('admin.contractors.approve');
     Route::patch('/admin/contractors/{id}/reject', [DashboardController::class, 'reject'])->name('admin.contractors.reject');

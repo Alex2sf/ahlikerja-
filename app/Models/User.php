@@ -7,10 +7,11 @@ use App\Models\Like;
 use App\Models\Comment;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
 
-    use LogsActivity;
+    use LogsActivity, Notifiable;
     protected $fillable = [
         'name', 'email', 'password', 'role'
     ];

@@ -4,12 +4,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+
 class ContractorProfile extends Model
 {
-
     use LogsActivity;
+
     protected $fillable = [
-        'user_id', 'foto_profile', 'nama_depan', 'nama_belakang', 'nomor_telepon',
+        'user_id', 'foto_profile', 'nomor_telepon',
         'alamat', 'perusahaan', 'nomor_npwp', 'bidang_usaha', 'dokumen_pendukung',
         'portofolio', 'approved', 'admin_note', 'identity_images', 'bio'
     ];

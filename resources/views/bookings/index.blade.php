@@ -28,6 +28,17 @@
                             @else
                                 <p class="text-muted">Tidak ada gambar.</p>
                             @endif
+                            @if ($booking->dokumen)
+                                <p><strong>Dokumen dari Anda:</strong> <a href="{{ Storage::url($booking->dokumen) }}" target="_blank">Lihat Dokumen</a></p>
+                            @else
+                                <p class="text-muted">Tidak ada dokumen dari Anda.</p>
+                            @endif
+                            @if ($booking->response_file)
+                            <p><strong>File Balasan:</strong> <a href="{{ Storage::url($booking->response_file) }}" target="_blank">Lihat File Balasan</a></p>
+                            @else
+                                <p class="text-muted">Tidak ada file balasan.</p>
+                            @endif
+
                             <p><strong>Lokasi:</strong> {{ $booking->lokasi }}</p>
                             <p><strong>Estimasi Anggaran:</strong> Rp {{ number_format($booking->estimasi_anggaran, 2, ',', '.') }}</p>
                             <p><strong>Durasi:</strong> {{ $booking->durasi }}</p>
@@ -43,7 +54,7 @@
                                 @endif
                                 <p>Kontraktor:
                                     <a href="{{ route('contractor.profile.showPublic', $booking->contractor->id) }}" class="contractor-link">
-                                        {{ $booking->contractor->name }}
+                                        {{ $booking->contractor->contractorProfile ? $booking->contractor->contractorProfile->perusahaan : 'Perusahaan belum diatur' }}
                                         @if ($booking->contractor->contractorProfile && $booking->contractor->contractorProfile->nama_panggilan)
                                             ({{ $booking->contractor->contractorProfile->nama_panggilan }})
                                         @endif
@@ -51,6 +62,9 @@
                                 </p>
                             </div>
                             <p>Status: <span class="status {{ $booking->status }}">{{ $booking->status }}</span></p>
+                            @if ($booking->status === 'declined' && $booking->decline_reason)
+                                <p class="decline-reason"><strong>Alasan Penolakan:</strong> {{ $booking->decline_reason }}</p>
+                            @endif
                             <p><small>Dibuat pada: {{ $booking->created_at->format('d F Y') }}</small></p>
                         </div>
                     @endforeach
@@ -194,9 +208,20 @@
             color: #155724;
         }
 
-        .status.rejected {
+        .status.declined {
             background-color: #f8d7da;
             color: #721c24;
+        }
+
+        /* Decline Reason */
+        .decline-reason {
+            font-size: 14px;
+            color: #721c24;
+            margin-bottom: 8px;
+            background-color: #f8d7da;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
         }
 
         /* Notification */
@@ -245,6 +270,18 @@
             background-color: #c7b9a1;
         }
 
+        /* Link Dokumen */
+        a[href$=".pdf"], a[href$=".doc"], a[href$=".docx"] {
+            color: #5a3e36;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a[href$=".pdf"]:hover, a[href$=".doc"]:hover, a[href$=".docx"]:hover {
+            text-decoration: underline;
+            color: #a8c3b8;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .bookings-section {
@@ -285,6 +322,11 @@
                 text-align: center;
                 padding: 5px 10px;
                 font-size: 12px;
+            }
+
+            .decline-reason {
+                font-size: 13px;
+                padding: 6px;
             }
         }
     </style>

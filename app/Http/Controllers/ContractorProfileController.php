@@ -35,8 +35,6 @@ class ContractorProfileController extends Controller
 
         $request->validate([
             'foto_profile' => 'nullable|image|max:2048',
-            'nama_depan' => 'required|string|max:255',
-            'nama_belakang' => 'required|string|max:255',
             'nomor_telepon' => 'nullable|string|max:15',
             'alamat' => 'nullable|string',
             'perusahaan' => 'required|string|max:255',
@@ -49,8 +47,7 @@ class ContractorProfileController extends Controller
         ]);
 
         $data = $request->only([
-            'nama_depan', 'nama_belakang', 'nomor_telepon', 'alamat',
-            'perusahaan', 'nomor_npwp', 'bio'
+            'nomor_telepon', 'alamat', 'perusahaan', 'nomor_npwp', 'bio'
         ]);
 
         // Handle foto profil

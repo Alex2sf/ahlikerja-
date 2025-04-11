@@ -47,18 +47,18 @@ class OrderController extends Controller
         if ($user->role === 'user') {
             $postOrders = Order::where('user_id', $user->id)
                               ->with('contractor.contractorProfile', 'post')
-                              ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
+                              ->orderBy('created_at', 'desc')
                               ->get();
             $bookingOrders = Booking::where('user_id', $user->id)
                                   ->with('contractor.contractorProfile')
                                   ->where('status', 'accepted')
-                                  ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
+                                  ->orderBy('created_at', 'desc')
                                   ->get();
             return view('orders.index', compact('postOrders', 'bookingOrders'));
         } elseif ($user->role === 'kontraktor') {
             $orders = Order::where('contractor_id', $user->id)
-                          ->with('user.profile', 'post')
-                          ->orderBy('created_at', 'desc') // Urutkan dari terbaru ke terlama
+                          ->with('user.profile', 'post', 'review') // Tambahkan relasi 'review'
+                          ->orderBy('created_at', 'desc')
                           ->get();
             return view('orders.contractor', compact('orders'));
         }
@@ -119,14 +119,25 @@ class OrderController extends Controller
         $request->validate([
             'rating' => 'required|integer|between:1,5',
             'review' => 'nullable|string|max:1000',
+            'pembayaran' => 'nullable|image|max:2048', // Validasi untuk file gambar (maks 2MB)
         ]);
 
-        $review = Review::create(array_merge($reviewData, [
+        $reviewData = array_merge($reviewData, [
             'user_id' => Auth::id(),
             'contractor_id' => $entity->contractor_id,
             'rating' => $request->rating,
             'review' => $request->review,
-        ]));
+        ]);
+
+        // Handle upload gambar pembayaran
+        if ($request->hasFile('pembayaran')) {
+            $file = $request->file('pembayaran');
+            $fileName = time() . '_' . uniqid() . '.' . $file->extension();
+            $path = $file->storeAs('reviews/pembayaran', $fileName, 'public');
+            $reviewData['pembayaran'] = $path;
+        }
+
+        $review = Review::create($reviewData);
 
         Log::info('Review created', ['review_id' => $review->id]);
 

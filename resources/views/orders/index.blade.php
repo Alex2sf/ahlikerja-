@@ -20,7 +20,11 @@
                         @foreach ($postOrders as $order)
                             <div class="order-card">
                                 <h3>Postingan: {{ $order->post->judul }}</h3>
-                                <p>Kontraktor: <a href="{{ route('contractor.profile.showPublic', $order->contractor->id) }}" class="contractor-link">{{ $order->contractor->name }}</a></p>
+                                <p>Kontraktor:
+                                    <a href="{{ route('contractor.profile.showPublic', $order->contractor->id) }}" class="contractor-link">
+                                        {{ $order->contractor->contractorProfile ? $order->contractor->contractorProfile->perusahaan : 'Perusahaan belum diatur' }}
+                                    </a>
+                                </p>
                                 <p>Status: <span class="status {{ $order->is_completed ? 'completed' : 'pending' }}">{{ $order->is_completed ? 'Selesai' : 'Belum Selesai' }}</span></p>
 
                                 @if (!$order->is_completed)
@@ -32,7 +36,7 @@
                                     </div>
                                 @elseif (!$order->review)
                                     <div class="review-form mt-3">
-                                        <form action="{{ route('orders.review', $order->id) }}" method="POST">
+                                        <form action="{{ route('orders.review', $order->id) }}" method="POST" enctype="multipart/form-data">
                                             @csrf
                                             <label>Rating (1-5):</label>
                                             <select name="rating" required>
@@ -44,6 +48,11 @@
                                             </select>
                                             <label>Ulasan:</label>
                                             <textarea name="review" placeholder="Tulis ulasan Anda..." rows="3" required></textarea>
+                                            <label>Bukti Pembayaran:</label>
+                                            <input type="file" name="pembayaran" accept="image/*">
+                                            @error('pembayaran')
+                                                <span class="error-message">{{ $message }}</span>
+                                            @enderror
                                             <button type="submit" class="btn btn-primary mt-2">Kirim Ulasan</button>
                                         </form>
                                     </div>
@@ -51,6 +60,12 @@
                                     <div class="review-details mt-3">
                                         <p>Rating: {{ $order->review->rating }}/5</p>
                                         <p>Ulasan: {{ $order->review->review ?? 'Tidak ada ulasan' }}</p>
+                                        @if ($order->review->pembayaran)
+                                            <p>Bukti Pembayaran:</p>
+                                            <img src="{{ Storage::url($order->review->pembayaran) }}" alt="Bukti Pembayaran" class="payment-image">
+                                        @else
+                                            <p>Tidak ada bukti pembayaran.</p>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -67,7 +82,11 @@
                         @foreach ($bookingOrders as $bookingOrder)
                             <div class="order-card">
                                 <h3>Judul Pesanan: {{ $bookingOrder->judul }}</h3>
-                                <p>Kontraktor: <a href="{{ route('contractor.profile.showPublic', $bookingOrder->contractor->id) }}" class="contractor-link">{{ $bookingOrder->contractor->name }}</a></p>
+                                <p>Kontraktor:
+                                    <a href="{{ route('contractor.profile.showPublic', $bookingOrder->contractor->id) }}" class="contractor-link">
+                                        {{ $bookingOrder->contractor->contractorProfile ? $bookingOrder->contractor->contractorProfile->perusahaan : 'Perusahaan belum diatur' }}
+                                    </a>
+                                </p>
                                 <p>Status: <span class="status {{ $bookingOrder->is_completed ? 'completed' : 'pending' }}">{{ $bookingOrder->is_completed ? 'Selesai' : 'Belum Selesai' }}</span></p>
 
                                 @if (!$bookingOrder->is_completed)
@@ -79,7 +98,7 @@
                                     </div>
                                 @elseif (!$bookingOrder->review)
                                     <div class="review-form mt-3">
-                                        <form action="{{ route('orders.review', $bookingOrder->id) }}" method="POST">
+                                        <form action="{{ route('orders.review', $bookingOrder->id) }}" method="POST" enctype="multipart/form-data">
                                             @csrf
                                             <label>Rating (1-5):</label>
                                             <select name="rating" required>
@@ -91,6 +110,11 @@
                                             </select>
                                             <label>Ulasan:</label>
                                             <textarea name="review" placeholder="Tulis ulasan Anda..." rows="3" required></textarea>
+                                            <label>Bukti Pembayaran:</label>
+                                            <input type="file" name="pembayaran" accept="image/*">
+                                            @error('pembayaran')
+                                                <span class="error-message">{{ $message }}</span>
+                                            @enderror
                                             <button type="submit" class="btn btn-primary mt-2">Kirim Ulasan</button>
                                         </form>
                                     </div>
@@ -98,6 +122,12 @@
                                     <div class="review-details mt-3">
                                         <p>Rating: {{ $bookingOrder->review->rating }}/5</p>
                                         <p>Ulasan: {{ $bookingOrder->review->review ?? 'Tidak ada ulasan' }}</p>
+                                        @if ($bookingOrder->review->pembayaran)
+                                            <p>Bukti Pembayaran:</p>
+                                            <img src="{{ Storage::url($bookingOrder->review->pembayaran) }}" alt="Bukti Pembayaran" class="payment-image">
+                                        @else
+                                            <p>Tidak ada bukti pembayaran.</p>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -216,7 +246,8 @@
         }
 
         .review-form select,
-        .review-form textarea {
+        .review-form textarea,
+        .review-form input[type="file"] {
             width: 100%;
             padding: 6px;
             border: 1px solid #d4c8b5;
@@ -233,7 +264,8 @@
         }
 
         .review-form select:focus,
-        .review-form textarea:focus {
+        .review-form textarea:focus,
+        .review-form input[type="file"]:focus {
             border-color: #a8c3b8;
             outline: none;
         }
@@ -243,6 +275,21 @@
             font-size: 14px;
             color: #555;
             margin: 4px 0;
+        }
+
+        .payment-image {
+            max-width: 150px;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        /* Error Message */
+        .error-message {
+            display: block;
+            color: #721c24;
+            font-size: 12px;
+            margin-top: 5px;
         }
 
         /* Button Group */
@@ -352,6 +399,10 @@
 
             .review-form textarea {
                 height: 60px;
+            }
+
+            .payment-image {
+                max-width: 100px;
             }
         }
     </style>

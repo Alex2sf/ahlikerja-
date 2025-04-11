@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    protected $fillable = ['user_id', 'contractor_id', 'judul', 'deskripsi', 'gambar', 'lokasi', 'estimasi_anggaran', 'durasi', 'status', 'is_completed'];
+    protected $fillable = ['user_id', 'contractor_id', 'judul', 'deskripsi', 'gambar', 'dokumen', 'response_file','lokasi', 'estimasi_anggaran', 'durasi', 'status','decline_reason' ,'is_completed'];
     protected $casts = [
         'gambar' => 'array',
         'estimasi_anggaran' => 'decimal:2',
