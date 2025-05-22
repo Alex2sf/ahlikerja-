@@ -20,7 +20,7 @@
                 <div class="profile-content">
                     <div class="profile-photo">
                         @if ($profile->foto_profile)
-                        <img src="{{ Storage::url($profile->foto_profile) }}" alt="Foto Profil" class="profile-preview">
+                            <img src="{{ Storage::url($profile->foto_profile) }}" alt="Foto Profil" class="profile-preview">
                         @else
                             <img src="{{ asset('images/default-profile.png') }}" alt="Foto Profil Default">
                         @endif
@@ -35,28 +35,8 @@
                     </div>
                     <div class="info-item">
                         <h2>Bio</h2>
-                        <p>{{ $profile->bio}}</p>
+                        <p>{{ $profile->bio }}</p>
                     </div>
-                    {{-- <div class="info-item">
-                        <h2>Jenis Kelamin</h2>
-                        <p>{{ $profile->jenis_kelamin ?? 'Tidak diisi' }}</p>
-                    </div>
-                    <div class="info-item">
-                        <h2>Tanggal Lahir</h2>
-                        <p>{{ $profile->tanggal_lahir ? \Carbon\Carbon::parse($profile->tanggal_lahir)->format('d F Y') : 'Tidak diisi' }}</p>
-                    </div>
-                    <div class="info-item">
-                        <h2>Tempat Lahir</h2>
-                        <p>{{ $profile->tempat_lahir ?? 'Tidak diisi' }}</p>
-                    </div>
-                    <div class="info-item">
-                        <h2>Alamat Lengkap</h2>
-                        <p>{{ $profile->alamat_lengkap ?? 'Tidak diisi' }}</p>
-                    </div>
-                    <div class="info-item">
-                        <h2>Nomor Telepon</h2>
-                        <p>{{ $profile->nomor_telepon ?? 'Tidak diisi' }}</p>
-                    </div> --}}
                     <div class="info-item">
                         <h2>Email</h2>
                         <p>{{ $profile->email }}</p>
@@ -73,6 +53,13 @@
                             <p>Tidak ada media sosial yang diisi.</p>
                         @endif
                     </div>
+
+                    <!-- Tombol Chat untuk Kontraktor -->
+                    @if (Auth::check() && Auth::user()->role === 'kontraktor')
+                        <div class="button-group">
+                            <a href="{{ route('chats.index', $user->id) }}" class="btn btn-primary">Chat</a>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -88,14 +75,14 @@
                             <p>{{ $post->deskripsi }}</p>
                             <!-- Tampilkan Gambar -->
                             @if ($post->gambar && count($post->gambar) > 0)
-                            <h3>Gambar:</h3>
-                            <div class="post-images">
-                                @foreach ($post->gambar as $gambar)
-                                    <img src="{{ Storage::url($gambar) }}" alt="Gambar Postingan" data-full-image="{{ Storage::url($gambar) }}" class="post-image">
-                                @endforeach
-                            </div>
+                                <h3>Gambar:</h3>
+                                <div class="post-images">
+                                    @foreach ($post->gambar as $gambar)
+                                        <img src="{{ Storage::url($gambar) }}" alt="Gambar Postingan" data-full-image="{{ Storage::url($gambar) }}" class="post-image">
+                                    @endforeach
+                                </div>
                             @else
-                            <p>Tidak ada gambar.</p>
+                                <p>Tidak ada gambar.</p>
                             @endif
                             <p><strong>Lokasi:</strong> {{ $post->lokasi }}</p>
                             <p><strong>Estimasi Anggaran:</strong> Rp {{ number_format($post->estimasi_anggaran, 2, ',', '.') }}</p>
@@ -230,6 +217,11 @@
             margin: 0;
         }
 
+        .profile-section .button-group {
+            margin-top: 20px;
+            text-align: center;
+        }
+
         /* Posts Section (Kanan) */
         .posts-section {
             flex: 1;
@@ -239,7 +231,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
             width: 800px;
-            margin-top:20px;
+            margin-top: 20px;
         }
 
         .posts-section h1 {

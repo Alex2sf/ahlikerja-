@@ -1,46 +1,42 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Booking;
 use App\Models\Offer;
+use App\Models\Post;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Notifications\PaymentStageUpdatedNotification; // Tambahkan import
 
 class OrderController extends Controller
 {
-
-    public function store($offerId)
+    public function store(Request $request, $postId)
     {
-        $offer = Offer::findOrFail($offerId);
-        $user = Auth::user();
+        $post = Post::findOrFail($postId);
+        $contractor = Auth::user();
 
-        // Pastikan user adalah pemilik postingan
-        if ($offer->post->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk membuat pemesanan ini.');
+        if ($contractor->role !== 'kontraktor') {
+            return redirect()->back()->with('error', 'Hanya kontraktor yang dapat memberikan penawaran.');
         }
 
-        // Pastikan tawaran sudah diterima
-        if (!$offer->accepted) {
-            return redirect()->back()->with('error', 'Tawaran ini belum diterima, silakan terima tawaran terlebih dahulu.');
+        if ($post->offers()->where('contractor_id', $contractor->id)->exists()) {
+            return redirect()->back()->with('error', 'Anda sudah memberikan penawaran untuk postingan ini.');
         }
 
-        // Cek apakah pemesanan sudah ada untuk tawaran ini
-        if (Order::where('offer_id', $offer->id)->exists()) {
-            return redirect()->back()->with('error', 'Pemesanan untuk tawaran ini sudah ada.');
-        }
-
-        Order::create([
-            'user_id' => $user->id,
-            'contractor_id' => $offer->contractor_id,
-            'post_id' => $offer->post_id,
-            'offer_id' => $offer->id
+        $offer = Offer::create([
+            'contractor_id' => $contractor->id,
+            'post_id' => $post->id,
+            'accepted' => false
         ]);
 
-        return redirect()->route('orders.index')->with('success', 'Pemesanan berhasil ditambahkan ke keranjang!');
+        return redirect()->back()->with('success', 'Penawaran berhasil dikirim!');
     }
+
     public function index()
     {
         $user = Auth::user();
@@ -51,13 +47,13 @@ class OrderController extends Controller
                               ->get();
             $bookingOrders = Booking::where('user_id', $user->id)
                                   ->with('contractor.contractorProfile')
-                                  ->where('status', 'accepted')
+                                  ->where('final_approve', true)
                                   ->orderBy('created_at', 'desc')
                                   ->get();
             return view('orders.index', compact('postOrders', 'bookingOrders'));
         } elseif ($user->role === 'kontraktor') {
             $orders = Order::where('contractor_id', $user->id)
-                          ->with('user.profile', 'post', 'review') // Tambahkan relasi 'review'
+                          ->with('user.profile', 'post', 'review')
                           ->orderBy('created_at', 'desc')
                           ->get();
             return view('orders.contractor', compact('orders'));
@@ -77,16 +73,118 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menandai pemesanan ini selesai.');
         }
 
-        $updated = $order->update(['is_completed' => true]);
-        Log::info('Order update attempted', ['order_id' => $orderId, 'updated' => $updated]);
-
-        if ($updated) {
-            return redirect()->back()->with('success', 'Pemesanan telah ditandai selesai. Silakan beri rating dan ulasan.');
-        } else {
-            Log::error('Failed to update order', ['order_id' => $orderId]);
-            return redirect()->back()->with('error', 'Gagal menandai pemesanan selesai.');
+        if ($order->is_completed) {
+            return redirect()->back()->with('error', 'Pemesanan ini sudah ditandai selesai.');
         }
+
+        // Validasi input untuk pembayaran terakhir dan review
+        $request->validate([
+            'payment_proof' => 'required|image|max:2048', // Bukti pembayaran terakhir wajib
+            'rating' => 'required|integer|between:1,5',
+            'review' => 'nullable|string|max:1000',
+            'pembayaran' => 'nullable|image|max:2048', // Bukti pembayaran tambahan (opsional) untuk review
+        ]);
+
+        // Simpan bukti pembayaran terakhir
+        $stage = $order->payment_stage + 1; // Tahap terakhir adalah tahap berikutnya
+        if ($stage > 4) {
+            $stage = 4; // Maksimal tahap 4
+        }
+
+        if ($request->hasFile('payment_proof')) {
+            $file = $request->file('payment_proof');
+            $fileName = time() . '_' . uniqid() . '.' . $file->extension();
+            $path = $file->storeAs("payments/order/stage_{$stage}", $fileName, 'public');
+            $column = "payment_proof_{$stage}";
+            $order->update([
+                $column => $path,
+                'payment_stage' => $stage,
+                'is_completed' => true // Tandai selesai
+            ]);
+        }
+
+        // Simpan review
+        $reviewData = [
+            'order_id' => $order->id,
+            'booking_id' => null,
+            'user_id' => Auth::id(),
+            'contractor_id' => $order->contractor_id,
+            'rating' => $request->rating,
+            'review' => $request->review,
+        ];
+
+        if ($request->hasFile('pembayaran')) {
+            $file = $request->file('pembayaran');
+            $fileName = time() . '_' . uniqid() . '.' . $file->extension();
+            $path = $file->storeAs('reviews/pembayaran', $fileName, 'public');
+            $reviewData['pembayaran'] = $path;
+        }
+
+        $review = Review::create($reviewData);
+        Log::info('Review created', ['review_id' => $review->id]);
+
+        // Kirim notifikasi ke kontraktor bahwa pembayaran final telah dilakukan
+        $order->contractor->notify(new PaymentStageUpdatedNotification($order, $stage, 'order', true));
+
+        return redirect()->back()->with('success', 'Pemesanan telah selesai. Bukti pembayaran terakhir dan ulasan telah disimpan.');
     }
+
+    public function uploadPaymentProof(Request $request, $id, $type, $stage)
+    {
+        Log::info('Upload payment proof attempt', ['id' => $id, 'type' => $type, 'stage' => $stage, 'user_id' => Auth::id()]);
+
+        if ($type === 'order') {
+            $entity = Order::findOrFail($id);
+            $routePrefix = 'orders';
+        } elseif ($type === 'booking') {
+            $entity = Booking::findOrFail($id);
+            $routePrefix = 'bookings';
+        } else {
+            return redirect()->back()->with('error', 'Tipe pemesanan tidak valid.');
+        }
+
+        if ($entity->user_id !== Auth::id()) {
+            Log::warning('Unauthorized attempt to upload payment proof', ['id' => $id, 'user_id' => Auth::id()]);
+            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengunggah bukti pembayaran.');
+        }
+
+        if ($entity->is_completed) {
+            return redirect()->back()->with('error', 'Pemesanan sudah selesai, tidak dapat mengunggah bukti pembayaran lagi.');
+        }
+
+        if ($stage < 1 || $stage > 4) {
+            return redirect()->back()->with('error', 'Tahap pembayaran tidak valid.');
+        }
+
+        if ($entity->payment_stage != ($stage - 1)) {
+            return redirect()->back()->with('error', 'Anda harus menyelesaikan tahap sebelumnya terlebih dahulu.');
+        }
+
+        $request->validate([
+            'payment_proof' => 'required|image|max:2048',
+        ]);
+
+        if ($request->hasFile('payment_proof')) {
+            $file = $request->file('payment_proof');
+            $fileName = time() . '_' . uniqid() . '.' . $file->extension();
+            $path = $file->storeAs("payments/{$type}/stage_{$stage}", $fileName, 'public');
+
+            $column = "payment_proof_{$stage}";
+            $entity->update([
+                $column => $path,
+                'payment_stage' => $stage
+            ]);
+
+            // Kirim notifikasi ke kontraktor bahwa pembayaran tahap telah diunggah
+            $entity->contractor->notify(new PaymentStageUpdatedNotification($entity, $stage, $type));
+
+            Log::info('Payment proof uploaded', ['id' => $id, 'type' => $type, 'stage' => $stage, 'path' => $path]);
+            return redirect()->back()->with('success', "Bukti pembayaran tahap {$stage} berhasil diunggah.");
+        }
+
+        return redirect()->back()->with('error', 'Gagal mengunggah bukti pembayaran.');
+    }
+
     public function storeReview(Request $request, $orderId)
     {
         Log::info('Store review attempt', ['order_id' => $orderId, 'user_id' => Auth::id()]);
@@ -109,9 +207,11 @@ class OrderController extends Controller
             Log::warning('Unauthorized attempt to review', ['id' => $orderId, 'user_id' => Auth::id()]);
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengulas pemesanan ini.');
         }
+
         if (!$entity->is_completed) {
             return redirect()->back()->with('error', 'Pemesanan ini belum selesai.');
         }
+
         if ($entity->review) {
             return redirect()->back()->with('error', 'Anda sudah memberikan ulasan untuk pemesanan ini.');
         }
@@ -119,7 +219,7 @@ class OrderController extends Controller
         $request->validate([
             'rating' => 'required|integer|between:1,5',
             'review' => 'nullable|string|max:1000',
-            'pembayaran' => 'nullable|image|max:2048', // Validasi untuk file gambar (maks 2MB)
+            'pembayaran' => 'nullable|image|max:2048',
         ]);
 
         $reviewData = array_merge($reviewData, [
@@ -129,7 +229,6 @@ class OrderController extends Controller
             'review' => $request->review,
         ]);
 
-        // Handle upload gambar pembayaran
         if ($request->hasFile('pembayaran')) {
             $file = $request->file('pembayaran');
             $fileName = time() . '_' . uniqid() . '.' . $file->extension();

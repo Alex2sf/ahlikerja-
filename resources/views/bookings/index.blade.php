@@ -9,6 +9,9 @@
             @if (session('success'))
                 <div class="notification success">{{ session('success') }}</div>
             @endif
+            @if (session('error'))
+                <div class="notification error">{{ session('error') }}</div>
+            @endif
 
             @if ($bookings->isEmpty())
                 <p class="text-center text-muted">Tidak ada pesanan.</p>
@@ -34,7 +37,7 @@
                                 <p class="text-muted">Tidak ada dokumen dari Anda.</p>
                             @endif
                             @if ($booking->response_file)
-                            <p><strong>File Balasan:</strong> <a href="{{ Storage::url($booking->response_file) }}" target="_blank">Lihat File Balasan</a></p>
+                                <p><strong>File Balasan:</strong> <a href="{{ Storage::url($booking->response_file) }}" target="_blank">Lihat File Balasan</a></p>
                             @else
                                 <p class="text-muted">Tidak ada file balasan.</p>
                             @endif
@@ -62,8 +65,15 @@
                                 </p>
                             </div>
                             <p>Status: <span class="status {{ $booking->status }}">{{ $booking->status }}</span></p>
+                            <p>Final Approve: <span class="status {{ $booking->final_approve ? 'approved' : 'pending' }}">{{ $booking->final_approve ? 'Approved' : 'Pending' }}</span></p>
                             @if ($booking->status === 'declined' && $booking->decline_reason)
                                 <p class="decline-reason"><strong>Alasan Penolakan:</strong> {{ $booking->decline_reason }}</p>
+                            @endif
+                            @if ($booking->status === 'accepted' && !$booking->final_approve)
+                                <form action="{{ route('bookings.finalApprove', $booking->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Apakah Anda yakin ingin menyetujui pesanan ini secara final?')">Final Approve</button>
+                                </form>
                             @endif
                             <p><small>Dibuat pada: {{ $booking->created_at->format('d F Y') }}</small></p>
                         </div>
@@ -213,6 +223,11 @@
             color: #721c24;
         }
 
+        .status.approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
         /* Decline Reason */
         .decline-reason {
             font-size: 14px;
@@ -225,15 +240,24 @@
         }
 
         /* Notification */
-        .notification.success {
+        .notification {
             padding: 12px;
             border-radius: 6px;
             margin-bottom: 15px;
             text-align: center;
             font-size: 13px;
+        }
+
+        .notification.success {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
+        }
+
+        .notification.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         /* Back Link */
@@ -258,6 +282,14 @@
         }
 
         .btn:hover {
+            background-color: #8ba89a;
+        }
+
+        .btn-primary {
+            background-color: #a8c3b8;
+        }
+
+        .btn-primary:hover {
             background-color: #8ba89a;
         }
 

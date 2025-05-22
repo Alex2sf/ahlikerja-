@@ -69,11 +69,27 @@
                                     <strong>Gambar Data Diri:</strong>
                                     <ul class="document-list">
                                         @foreach ($contractor->identity_images as $image)
-                                        <li>
-                                            <a href="{{ Storage::url($image) }}" target="_blank">
-                                                <img src="{{ Storage::url($image) }}" alt="Image" class="item-image">
-                                            </a>
-                                        </li>
+                                            <li>
+                                                <a href="{{ Storage::url($image) }}" target="_blank">
+                                                    <img src="{{ Storage::url($image) }}" alt="Image" class="item-image">
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <!-- Dokumen Legalitas -->
+                            @if ($contractor->legalitas && count($contractor->legalitas) > 0)
+                                <div class="document-section">
+                                    <strong>Dokumen Legalitas:</strong>
+                                    <ul class="document-list">
+                                        @foreach ($contractor->legalitas as $doc)
+                                            <li>
+                                                <a href="{{ Storage::url($doc) }}" target="_blank" class="item-link">
+                                                    {{ basename($doc) }}
+                                                </a>
+                                            </li>
                                         @endforeach
                                     </ul>
                                 </div>

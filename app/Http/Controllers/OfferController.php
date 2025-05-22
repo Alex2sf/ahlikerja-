@@ -5,19 +5,20 @@ use App\Models\Offer;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\OfferReceivedNotification;
+use App\Notifications\OfferAcceptedNotification;
+use App\Notifications\OfferNotSelectedNotification;
 
 class OfferController extends Controller
 {
-
-
     public function store(Request $request, $postId)
     {
         $post = Post::findOrFail($postId);
         $contractor = Auth::user();
 
-        // Pastikan user adalah kontraktor
-        if ($contractor->role !== 'kontraktor') {
-            return redirect()->back()->with('error', 'Hanya kontraktor yang dapat memberikan penawaran.');
+        // Cek jika user adalah kontraktor dan belum disetujui
+        if ($contractor->role !== 'kontraktor' || (!$contractor->contractorProfile || !$contractor->contractorProfile->approved)) {
+            return redirect()->back()->with('error', 'Anda harus disetujui oleh admin terlebih dahulu untuk memberikan penawaran.');
         }
 
         // Cek apakah kontraktor sudah memberikan penawaran untuk postingan ini
@@ -25,15 +26,21 @@ class OfferController extends Controller
             return redirect()->back()->with('error', 'Anda sudah memberikan penawaran untuk postingan ini.');
         }
 
-        Offer::create([
+        // Buat penawaran
+        $offer = Offer::create([
             'contractor_id' => $contractor->id,
             'post_id' => $post->id,
-            'accepted' => false
+            'accepted' => false,
+            'status' => 'pending'
         ]);
+
+        // Kirim notifikasi ke user (pemilik postingan)
+        $post->user->notify(new OfferReceivedNotification($offer));
 
         return redirect()->back()->with('success', 'Penawaran berhasil dikirim!');
     }
 
+    // Method lainnya tetap sama
     public function accept($offerId)
     {
         $offer = Offer::findOrFail($offerId);
@@ -44,19 +51,43 @@ class OfferController extends Controller
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menerima penawaran ini.');
         }
 
-        // Set semua penawaran lain untuk postingan ini menjadi tidak diterima
-        Offer::where('post_id', $offer->post->id)->update(['accepted' => false]);
+        // Ambil semua penawaran lain untuk postingan ini (kecuali penawaran yang diterima)
+        $otherOffers = Offer::where('post_id', $offer->post->id)
+            ->where('id', '!=', $offer->id)
+            ->get();
 
-        // Set penawaran ini sebagai diterima
-        $offer->update(['accepted' => true]);
+        // Set semua penawaran lain menjadi tidak diterima dan status 'not_selected'
+        Offer::where('post_id', $offer->post->id)
+            ->where('id', '!=', $offer->id)
+            ->update([
+                'accepted' => false,
+                'status' => 'not_selected',
+            ]);
 
-        // Buat pemesanan otomatis (seperti yang sudah ada sebelumnya)
+        // Kirim notifikasi ke kontraktor yang tidak terpilih
+        foreach ($otherOffers as $otherOffer) {
+            $otherOffer->contractor->notify(new OfferNotSelectedNotification($otherOffer));
+        }
+
+        // Set penawaran ini sebagai diterima dan status 'accepted'
+        $offer->update([
+            'accepted' => true,
+            'status' => 'accepted',
+        ]);
+
+        // Ubah status postingan menjadi 'closed'
+        $offer->post->update(['status' => 'closed']);
+
+        // Buat pemesanan otomatis
         \App\Models\Order::create([
             'user_id' => $user->id,
             'contractor_id' => $offer->contractor_id,
             'post_id' => $offer->post_id,
-            'offer_id' => $offer->id
+            'offer_id' => $offer->id,
         ]);
+
+        // Kirim notifikasi ke kontraktor yang penawarannya diterima
+        $offer->contractor->notify(new OfferAcceptedNotification($offer));
 
         return redirect()->back()->with('success', 'Penawaran dari kontraktor telah diterima dan ditambahkan ke keranjang pemesanan.');
     }
@@ -73,7 +104,7 @@ class OfferController extends Controller
         }
 
         // Cek apakah sudah ada penawaran yang diterima untuk postingan ini
-        $acceptedOffer = $post->offers()->where('accepted', true)->first();
+        $acceptedOffer = $post->offers()->where('status', 'accepted')->first();
 
         return view('offers.index', compact('post', 'offers', 'acceptedOffer'));
     }

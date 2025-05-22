@@ -36,52 +36,54 @@
             @else
                 <div class="contractor-grid">
                     @foreach ($contractors as $contractor)
-                        <div class="contractor-card">
-                            <div class="contractor-header">
-                                @if ($contractor->contractorProfile && $contractor->contractorProfile->foto_profile)
-                                    <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}">
-                                        <img src="{{ Storage::url($contractor->contractorProfile->foto_profile) }}" alt="Foto Profile" class="item-image">
-                                    </a>
-                                @else
-                                    <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}">
-                                        <img src="{{ asset('images/default-profile.png') }}" alt="Foto Default" class="profile-photo">
-                                    </a>
-                                @endif
-                            </div>
-                            <h2>
-                                <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}" class="contractor-link">
-                                    @if ($contractor->contractorProfile && $contractor->contractorProfile->perusahaan)
-                                        {{ $contractor->contractorProfile->perusahaan }}
-                                    @endif
+                    <div class="contractor-card">
+                        <div class="contractor-header">
+                            @if ($contractor->contractorProfile && $contractor->contractorProfile->foto_profile)
+                                <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}">
+                                    <img src="{{ Storage::url($contractor->contractorProfile->foto_profile) }}" alt="Foto Profile" class="item-image">
                                 </a>
-                            </h2>
-                            <p class="rating">
-                                @php
-                                    $reviews = $contractor->reviews;
-                                    $averageRating = $reviews->avg('rating');
-                                @endphp
-                                @if ($reviews->isEmpty())
-                                    Belum ada ulasan.
-                                @else
-                                    {{ number_format($averageRating, 1) }}/5 ({{ $reviews->count() }} ulasan)
-                                @endif
-                            </p>
-                            <p><strong>Lokasi:</strong> {{ $contractor->contractorProfile->alamat ?? 'Tidak diisi' }}</p>
-                            <p><strong>Bidang Usaha:</strong>
-                                @if ($contractor->contractorProfile && $contractor->contractorProfile->bidang_usaha && count($contractor->contractorProfile->bidang_usaha) > 0)
-                                    {{ implode(', ', $contractor->contractorProfile->bidang_usaha) }}
-                                @else
-                                    Tidak ada bidang usaha yang diisi.
-                                @endif
-                            </p>
-
-                            @if (Auth::check() && Auth::user()->role === 'user')
-                                <div class="button-group">
-                                    <a href="{{ route('bookings.create', $contractor->id) }}" class="btn btn-primary">Pesan</a>
-                                    <a href="{{ route('chats.index', $contractor->id) }}" class="btn btn-secondary">Chat</a>
-                                </div>
+                            @else
+                                <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}">
+                                    <img src="{{ asset('images/default-profile.png') }}" alt="Foto Default" class="profile-photo">
+                                </a>
                             @endif
                         </div>
+                        <h2>
+                            <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}" class="contractor-link">
+                                @if ($contractor->contractorProfile && $contractor->contractorProfile->perusahaan)
+                                    {{ $contractor->contractorProfile->perusahaan }}
+                                @endif
+                            </a>
+                        </h2>
+                        <p class="rating">
+                            @php
+                                $reviews = $contractor->reviews;
+                                $averageRating = $reviews->avg('rating');
+                            @endphp
+                            @if ($reviews->isEmpty())
+                                Belum ada ulasan.
+                            @else
+                                {{ number_format($averageRating, 1) }}/5 ({{ $reviews->count() }} ulasan)
+                            @endif
+                        </p>
+                        <p><strong>Lokasi:</strong> {{ $contractor->contractorProfile->alamat ?? 'Tidak diisi' }}</p>
+                        <p><strong>Bidang Usaha:</strong>
+                            @if ($contractor->contractorProfile && $contractor->contractorProfile->bidang_usaha && count($contractor->contractorProfile->bidang_usaha) > 0)
+                                {{ implode(', ', $contractor->contractorProfile->bidang_usaha) }}
+                            @else
+                                Tidak ada bidang usaha yang diisi.
+                            @endif
+                        </p>
+                        <!-- Tambahkan informasi tanggal pembuatan akun -->
+                        <p><strong>Terdaftar pada:</strong> {{ $contractor->created_at->format('d F Y') }}</p>
+
+                        @if (Auth::check() && Auth::user()->role === 'user')
+                            <div class="button-group">
+                                <a href="{{ route('bookings.create', $contractor->id) }}" class="btn btn-primary">Pesan</a>
+                                <a href="{{ route('chats.index', $contractor->id) }}" class="btn btn-secondary">Chat</a>
+                            </div>
+                        @endif
+                    </div>
                     @endforeach
                 </div>
             @endif

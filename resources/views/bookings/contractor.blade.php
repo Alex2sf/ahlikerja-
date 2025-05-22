@@ -72,6 +72,21 @@
                                     {{ $booking->status }}
                                 </span>
                             </p>
+                            <p class="booking-detail"><strong>Final Approve (User):</strong>
+                                <span class="status final-approve {{ $booking->final_approve ? 'approved' : 'pending' }}">
+                                    {{ $booking->final_approve ? 'Approved' : 'Pending' }}
+                                </span>
+                            </p>
+                            @if ($booking->status === 'pending' && $booking->deadline)
+                                <p class="booking-detail"><strong>Sisa Waktu:</strong>
+                                    <span id="deadline-{{ $booking->id }}" class="deadline-countdown">
+                                        {{ $booking->deadline->diffForHumans() }}
+                                    </span>
+                                    @if (now()->greaterThan($booking->deadline->subHours(1)))
+                                        <span class="warning"> (Segera tanggapi, kurang dari 1 jam tersisa!)</span>
+                                    @endif
+                                </p>
+                            @endif
                             @if ($booking->status === 'pending')
                                 <div class="status-action">
                                     <label for="status_action_{{ $booking->id }}" class="action-label">Pilih Aksi:</label>
@@ -89,6 +104,9 @@
                                         <button type="submit" class="btn btn-submit" id="submit_{{ $booking->id }}">Kirim</button>
                                     </form>
                                 </div>
+                            @endif
+                            @if ($booking->status === 'declined' && $booking->decline_reason)
+                                <p class="decline-reason"><strong>Alasan Penolakan:</strong> {{ $booking->decline_reason }}</p>
                             @endif
                             <p class="booking-detail"><strong>Dibuat pada:</strong> {{ $booking->created_at->format('d F Y') }}</p>
                             <div class="decoration-line"></div>
@@ -298,6 +316,33 @@
             background-color: #dc3545;
         }
 
+        .status.expired {
+            color: #fff;
+            background-color: #6c757d;
+        }
+
+        .status.final-approve.approved {
+            color: #fff;
+            background-color: #17a2b8; /* Warna biru untuk approved */
+        }
+
+        .status.final-approve.pending {
+            color: #fff;
+            background-color: #6c757d; /* Warna abu-abu untuk pending */
+        }
+
+        /* Decline Reason */
+        .decline-reason {
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            color: #721c24;
+            margin-bottom: 10px;
+            background-color: #f8d7da;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+
         /* Status Action */
         .status-action {
             margin: 15px 0;
@@ -415,6 +460,18 @@
             background-color: #c7b9a1;
         }
 
+        /* Deadline Countdown */
+        .deadline-countdown {
+            font-weight: bold;
+            color: #6c757d;
+        }
+
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .containers {
@@ -486,6 +543,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Logika untuk form status
             document.querySelectorAll('.status-select').forEach(function (select) {
                 select.addEventListener('change', function () {
                     const bookingId = this.dataset.bookingId;
@@ -575,6 +633,42 @@
                     }
                 });
             });
+
+            // Update countdown setiap detik
+            function updateCountdown() {
+                document.querySelectorAll('.deadline-countdown').forEach(function (element) {
+                    const bookingId = element.id.split('-')[1];
+                    const deadline = new Date(document.getElementById(`deadline-${bookingId}`).dataset.deadline);
+                    const now = new Date();
+                    const diff = deadline - now;
+
+                    if (diff <= 0) {
+                        element.textContent = 'Waktu habis';
+                        const booking = document.querySelector(`#form_${bookingId}`).closest('.booking-card');
+                        if (booking) {
+                            booking.querySelector('.status').textContent = 'expired';
+                            booking.querySelector('.status').classList.add('expired');
+                            document.getElementById(`form_${bookingId}`).style.display = 'none';
+                        }
+                    } else {
+                        const hours = Math.floor(diff / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                        element.textContent = `${hours}h ${minutes}m ${seconds}s tersisa`;
+                    }
+                });
+            }
+
+            // Inisialisasi data-deadline dari server
+            @foreach ($bookings as $booking)
+                @if ($booking->status === 'pending' && $booking->deadline)
+                    document.getElementById('deadline-{{ $booking->id }}').dataset.deadline = '{{ $booking->deadline->toIso8601String() }}';
+                @endif
+            @endforeach
+
+            // Jalankan countdown setiap detik
+            setInterval(updateCountdown, 1000);
+            updateCountdown(); // Jalankan pertama kali
         });
     </script>
 @endsection

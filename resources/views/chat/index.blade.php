@@ -65,14 +65,34 @@
                                         ({{ $chat->sender->profile->nama_panggilan }})
                                     @endif
                                     <p>{{ $chat->message }}</p>
+                                    <!-- Tampilkan Attachment (Foto atau Dokumen) -->
+                                    @if ($chat->attachment)
+                                        <div class="attachment">
+                                            @if (in_array(pathinfo($chat->attachment, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png']))
+                                                <a href="{{ Storage::url($chat->attachment) }}" target="_blank">
+                                                    <img src="{{ Storage::url($chat->attachment) }}" alt="Attachment" class="attachment-image">
+                                                </a>
+                                            @else
+                                                <a href="{{ Storage::url($chat->attachment) }}" target="_blank" class="attachment-link">
+                                                    <i class="fas fa-file"></i> {{ basename($chat->attachment) }}
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @endif
                                     <small>{{ $chat->is_read ? 'Sudah dibaca' : 'Belum dibaca' }} - {{ $chat->created_at->format('d F Y H:i') }}</small>
                                 </div>
                             @endforeach
                         </div>
-                        <form action="{{ route('chats.store', $receiver->id) }}" method="POST" class="message-form">
+                        <form action="{{ route('chats.store', $receiver->id) }}" method="POST" class="message-form" enctype="multipart/form-data">
                             @csrf
                             <div class="input-group">
                                 <textarea name="message" class="message-input" placeholder="Tulis pesan..." required></textarea>
+                                <div class="attachment-input">
+                                    <label for="attachment" class="attachment-label">
+                                        <i class="fas fa-paperclip"></i> Lampirkan File
+                                    </label>
+                                    <input type="file" id="attachment" name="attachment" accept="image/jpeg,image/png,application/pdf,.doc,.docx">
+                                </div>
                                 <button type="submit" class="btn btn-primary">Kirim</button>
                             </div>
                         </form>
@@ -234,17 +254,44 @@
             color: #6b5848;
         }
 
-        /* No Chat */
-        .no-chat {
+        /* Attachment */
+        .attachment {
+            margin-top: 10px;
+        }
+
+        .attachment-image {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #e0d8c9;
+        }
+
+        .attachment-link {
             display: flex;
             align-items: center;
-            justify-content: center;
-            height: 100%;
+            gap: 5px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .attachment-link:hover {
+            color: #8ba89a;
+            text-decoration: underline;
         }
 
         /* Message Form */
         .message-form {
             display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
             gap: 10px;
         }
 
@@ -262,6 +309,42 @@
         .message-input:focus {
             border-color: #a8c3b8;
             outline: none;
+        }
+
+        .attachment-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .attachment-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #5a3e36;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border: 1px solid #d4c8b5;
+            border-radius: 5px;
+            background-color: #fdfaf6;
+            transition: background-color 0.3s ease;
+        }
+
+        .attachment-label:hover {
+            background-color: #f8f1e9;
+        }
+
+        .attachment-input input[type="file"] {
+            display: none;
+        }
+
+        /* No Chat */
+        .no-chat {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
         }
 
         /* Notification */
@@ -361,6 +444,20 @@
 
             .message.received {
                 margin-right: 0;
+            }
+
+            .attachment-image {
+                max-width: 150px;
+                max-height: 150px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .attachment-input {
+                flex-direction: column;
+                align-items: flex-start;
             }
 
             .btn {

@@ -70,7 +70,7 @@
             <div class="tab-navigation">
                 <button class="tab-button active" onclick="openTab('dokumen')">Dokumen Pendukung</button>
                 <button class="tab-button" onclick="openTab('portofolio')">Portofolio</button>
-                <button class="tab-button" onclick="openTab('gambar')">Gambar Data Diri</button>
+                <button class="tab-button" onclick="openTab('legalitas')">Dokumen Legalitas</button>
                 <button class="tab-button" onclick="openTab('ratings')">Rating dan Ulasan</button>
             </div>
 
@@ -83,11 +83,9 @@
                         <ul class="item-list">
                             @foreach ($profile->dokumen_pendukung as $index => $dokumen)
                                 <li>
-
-                                        <a href="{{ Storage::url($dokumen) }}" target="_blank" class="item-link">
-                                            {{ basename($dokumen) }}
-                                        </a>
-
+                                    <a href="{{ Storage::url($dokumen) }}" target="_blank" class="item-link">
+                                        {{ basename($dokumen) }}
+                                    </a>
                                     <form action="{{ route('contractor.profile.delete', ['type' => 'dokumen', 'index' => $index]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus dokumen ini?');">
                                         @csrf
                                         @method('DELETE')
@@ -124,17 +122,19 @@
                     @endif
                 </div>
 
-                <!-- Gambar Data Diri -->
-                <div id="gambar" class="tab-pane">
-                    @if ($profile->identity_images && count($profile->identity_images) > 0)
-                        <h3>Gambar Data Diri</h3>
-                        <ul class="image-list">
-                            @foreach ($profile->identity_images as $index => $image)
+
+
+                <!-- Dokumen Legalitas -->
+                <div id="legalitas" class="tab-pane">
+                    @if ($profile->legalitas && count($profile->legalitas) > 0)
+                        <h3>Dokumen Legalitas</h3>
+                        <ul class="item-list">
+                            @foreach ($profile->legalitas as $index => $doc)
                                 <li>
-                                    <a href="{{ Storage::url($image) }}" target="_blank">
-                                        <img src="{{ Storage::url($image) }}" alt="Portofolio" class="item-image">
+                                    <a href="{{ Storage::url($doc) }}" target="_blank" class="item-link">
+                                        {{ basename($doc) }}
                                     </a>
-                                    <form action="{{ route('contractor.profile.delete', ['type' => 'gambar', 'index' => $index]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus gambar ini?');">
+                                    <form action="{{ route('contractor.profile.delete', ['type' => 'legalitas', 'index' => $index]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus dokumen legalitas ini?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
@@ -143,7 +143,7 @@
                             @endforeach
                         </ul>
                     @else
-                        <p>Tidak ada gambar data diri.</p>
+                        <p>Tidak ada dokumen legalitas.</p>
                     @endif
                 </div>
 
@@ -372,10 +372,24 @@
             padding: 0;
         }
 
+        .item-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
         .portfolio-grid, .image-list {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
+        }
+
+        .portfolio-grid li, .image-list li {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
         }
 
         .item-link {

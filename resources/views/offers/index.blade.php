@@ -35,10 +35,12 @@
                                     </a>
                                 </h2>
                                 <p>Status:
-                                    @if ($offer->accepted)
+                                    @if ($offer->status === 'accepted')
                                         <span class="status accepted">Diterima</span>
+                                    @elseif ($offer->status === 'not_selected')
+                                        <span class="status not-selected">Tidak Terpilih</span>
                                     @else
-                                        <span class="status pending">Penawaran Menunggu</span>
+                                        <span class="status pending">Menunggu Persetujuan</span>
                                     @endif
                                 </p>
                                 <small>Ditawarkan pada: {{ $offer->created_at->format('d F Y H:i') }}</small>
@@ -51,7 +53,7 @@
                                     <button type="submit" class="btn btn-success">Terima Penawaran</button>
                                 </form>
                             </div>
-                        @elseif ($offer->accepted)
+                        @elseif ($offer->status === 'accepted')
                             <p class="text-muted mt-2">Penawaran ini telah diterima dan ditambahkan ke keranjang pemesanan.</p>
                         @endif
                     </div>
@@ -70,43 +72,43 @@
             max-width: 800px;
             margin: 40px auto;
             background-color: #fff;
-            padding: 25px; /* Kurangi dari 30px */
-            border-radius: 12px; /* Kurangi dari 15px */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Sesuaikan shadow */
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
         }
 
         .offers-section h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 28px; /* Kurangi dari 32px */
+            font-size: 28px;
             color: #5a3e36;
             text-align: center;
-            margin-bottom: 25px; /* Kurangi dari 30px */
+            margin-bottom: 25px;
         }
 
         /* Offer Card */
         .offer-card {
             background-color: #fdfaf6;
-            padding: 15px; /* Kurangi dari 20px */
-            border-radius: 8px; /* Kurangi dari 10px */
-            margin-bottom: 15px; /* Kurangi dari 20px */
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
             transition: transform 0.3s ease;
         }
 
         .offer-card:hover {
-            transform: translateY(-4px); /* Kurangi dari -5px */
+            transform: translateY(-4px);
         }
 
         /* Offer Header */
         .offer-header {
             display: flex;
             align-items: center;
-            gap: 15px; /* Kurangi dari 20px */
+            gap: 15px;
         }
 
         .profile-image {
-            width: 80px; /* Tingkatkan dari 50px */
-            height: 80px; /* Tingkatkan dari 50px */
+            width: 80px;
+            height: 80px;
             object-fit: cover;
             border-radius: 50%;
             border: 2px solid #e0d8c9;
@@ -114,18 +116,18 @@
         }
 
         .profile-image:hover {
-            transform: scale(1.05); /* Efek hover */
+            transform: scale(1.05);
         }
 
         .offer-info h2 {
             font-family: 'Playfair Display', serif;
-            font-size: 18px; /* Kurangi dari 20px */
+            font-size: 18px;
             color: #5a3e36;
             margin-bottom: 5px;
         }
 
         .offer-info p {
-            font-size: 14px; /* Kurangi dari 16px */
+            font-size: 14px;
             color: #555;
             margin-bottom: 5px;
         }
@@ -142,9 +144,9 @@
         }
 
         .status {
-            padding: 3px 8px; /* Kurangi dari 4px 10px */
-            border-radius: 10px; /* Kurangi dari 12px */
-            font-size: 12px; /* Kurangi dari 14px */
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
             font-weight: 500;
         }
 
@@ -158,22 +160,27 @@
             color: #856404;
         }
 
+        .status.not-selected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
         /* Button Group */
         .button-group {
             display: flex;
             gap: 10px;
-            margin-top: 10px; /* Kurangi dari 15px */
+            margin-top: 10px;
         }
 
         /* Button Styles */
         .btn {
-            background-color: #a8c3b8; /* Hijau sage */
+            background-color: #a8c3b8;
             border: none;
             color: #fff;
-            padding: 6px 12px; /* Kurangi dari 8px 15px */
-            border-radius: 4px; /* Kurangi dari 5px */
+            padding: 6px 12px;
+            border-radius: 4px;
             transition: background-color 0.3s ease;
-            font-size: 13px; /* Kurangi dari 14px */
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             text-decoration: none;
@@ -181,7 +188,7 @@
         }
 
         .btn:hover {
-            background-color: #8ba89a; /* Hijau lebih gelap */
+            background-color: #8ba89a;
         }
 
         .btn-success {
@@ -193,7 +200,7 @@
         }
 
         .btn-secondary {
-            background-color: #d4c8b5; /* Beige */
+            background-color: #d4c8b5;
             color: #5a3e36;
         }
 
@@ -203,11 +210,11 @@
 
         /* Notification */
         .notification {
-            padding: 12px; /* Kurangi dari 15px */
-            border-radius: 6px; /* Kurangi dari 8px */
-            margin-bottom: 15px; /* Kurangi dari 20px */
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
             text-align: center;
-            font-size: 13px; /* Kurangi dari 14px */
+            font-size: 13px;
         }
 
         .notification.success {
@@ -225,18 +232,18 @@
         /* Back Link */
         .back-link {
             text-align: center;
-            margin-top: 25px; /* Kurangi dari 30px */
+            margin-top: 25px;
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
             .offers-section {
-                padding: 15px; /* Kurangi dari 20px */
-                margin: 15px; /* Kurangi dari 20px */
+                padding: 15px;
+                margin: 15px;
             }
 
             .offers-section h1 {
-                font-size: 24px; /* Kurangi dari 28px */
+                font-size: 24px;
             }
 
             .offer-header {
@@ -246,8 +253,8 @@
             }
 
             .profile-image {
-                width: 60px; /* Kurangi dari 80px */
-                height: 60px; /* Kurangi dari 80px */
+                width: 60px;
+                height: 60px;
             }
 
             .button-group {
@@ -258,8 +265,8 @@
             .btn {
                 width: 100%;
                 text-align: center;
-                padding: 5px 10px; /* Kurangi dari 6px 12px */
-                font-size: 12px; /* Kurangi dari 13px */
+                padding: 5px 10px;
+                font-size: 12px;
             }
         }
     </style>

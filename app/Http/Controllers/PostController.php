@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Routing\Controller;
@@ -26,6 +25,9 @@ class PostController extends Controller
 
     public function create()
     {
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
         return view('posts.create');
     }
 
@@ -41,26 +43,10 @@ class PostController extends Controller
     public function all(Request $request)
     {
         $user = Auth::user();
-
-        // Hanya kontraktor dengan langganan aktif yang bisa melihat semua postingan
-        if ($user->role === 'kontraktor') {
-            $subscription = Subscription::where('contractor_id', $user->id)
-                                       ->where('is_active', 1)
-                                       ->where('start_date', '<=', now())
-                                       ->where(function ($query) {
-                                           $query->where('end_date', '>=', now())
-                                                 ->orWhereNull('end_date');
-                                       })
-                                       ->first();
-
-            if (!$subscription) {
-                return redirect()->route('subscriptions.create')->with('error', 'Anda harus berlangganan terlebih dahulu untuk melihat semua postingan.');
-            }
-        }
+        $limit = 10;
 
         $query = Post::with(['user', 'likes', 'comments'])->orderBy('created_at', 'desc');
 
-        // Search berdasarkan judul atau deskripsi
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -68,32 +54,45 @@ class PostController extends Controller
                   ->orWhere('deskripsi', 'like', "%{$search}%");
             });
         }
-
-        // Filter berdasarkan lokasi
         if ($request->filled('lokasi')) {
             $query->where('lokasi', 'like', "%{$request->input('lokasi')}%");
         }
-
-        // Filter berdasarkan estimasi anggaran
         if ($request->filled('anggaran_min')) {
             $query->where('estimasi_anggaran', '>=', $request->input('anggaran_min'));
         }
         if ($request->filled('anggaran_max')) {
             $query->where('estimasi_anggaran', '<=', $request->input('anggaran_max'));
         }
-
-        // Filter berdasarkan durasi
         if ($request->filled('durasi')) {
             $query->where('durasi', 'like', "%{$request->input('durasi')}%");
         }
 
-        $posts = $query->get();
+        if ($user->role === 'kontraktor') {
+            $subscription = Subscription::where('contractor_id', $user->id)
+                                       ->where('is_active', true)
+                                       ->where('start_date', '<=', now())
+                                       ->where('end_date', '>=', now())
+                                       ->first();
 
-        return view('posts.all', compact('posts'));
+            if (!$subscription) {
+                $posts = $query->take($limit)->get();
+                $totalPosts = Post::count();
+                return view('posts.all', compact('posts', 'totalPosts', 'limit'));
+            }
+        }
+
+        $posts = $query->get();
+        $totalPosts = $posts->count();
+
+        return view('posts.all', compact('posts', 'totalPosts', 'limit'));
     }
 
     public function store(Request $request)
     {
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
         if (Auth::user()->role === 'kontraktor') {
             return redirect()->back()->with('error', 'Kontraktor tidak dapat membuat postingan tugas.');
         }
@@ -102,6 +101,7 @@ class PostController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
             'gambar.*' => 'nullable|image|max:2048',
+            'dokumen' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'lokasi' => 'required|string|max:255',
             'estimasi_anggaran' => 'required|numeric',
             'durasi' => 'required|string|max:255',
@@ -116,14 +116,23 @@ class PostController extends Controller
             }
         }
 
+        $dokumenPath = null;
+        if ($request->hasFile('dokumen')) {
+            $dokumen = $request->file('dokumen');
+            $fileName = time() . '_' . uniqid() . '.' . $dokumen->extension();
+            $dokumenPath = $dokumen->storeAs('posts/dokumen', $fileName, 'public');
+        }
+
         Post::create([
             'user_id' => Auth::id(),
             'judul' => $request->judul,
             'deskripsi' => $request->deskripsi,
             'gambar' => $gambarPaths,
+            'dokumen' => $dokumenPath,
             'lokasi' => $request->lokasi,
             'estimasi_anggaran' => $request->estimasi_anggaran,
             'durasi' => $request->durasi,
+            'status' => 'open',
         ]);
 
         return redirect()->route('posts.all')->with('success', 'Postingan berhasil dibuat!');
@@ -131,10 +140,13 @@ class PostController extends Controller
 
     public function edit($id)
     {
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
         $user = Auth::user();
         $post = Post::with('likes', 'comments')->findOrFail($id);
 
-        // Hanya pemilik postingan atau admin yang bisa mengedit
         if ($user->role !== 'admin' && $user->id !== $post->user_id) {
             return redirect()->route('posts.all')->with('error', 'Anda tidak memiliki izin untuk mengedit postingan ini.');
         }
@@ -144,10 +156,13 @@ class PostController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
         $user = Auth::user();
         $post = Post::findOrFail($id);
 
-        // Hanya pemilik postingan atau admin yang bisa mengupdate
         if ($user->role !== 'admin' && $user->id !== $post->user_id) {
             return redirect()->route('posts.all')->with('error', 'Anda tidak memiliki izin untuk mengupdate postingan ini.');
         }
@@ -157,9 +172,10 @@ class PostController extends Controller
             'deskripsi' => 'required|string',
             'gambar' => 'nullable|array',
             'gambar.*' => 'image|max:2048',
+            'dokumen' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'lokasi' => 'required|string|max:255',
             'estimasi_anggaran' => 'required|numeric',
-            'durasi' => 'required|string|max:100'
+            'durasi' => 'required|string|max:100',
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'lokasi', 'estimasi_anggaran', 'durasi']);
@@ -180,18 +196,31 @@ class PostController extends Controller
             $data['gambar'] = $gambarPaths;
         }
 
+        if ($request->hasFile('dokumen')) {
+            if ($post->dokumen) {
+                Storage::disk('public')->delete($post->dokumen);
+            }
+
+            $dokumen = $request->file('dokumen');
+            $fileName = time() . '_' . uniqid() . '.' . $dokumen->extension();
+            $path = $dokumen->storeAs('posts/dokumen', $fileName, 'public');
+            $data['dokumen'] = $path;
+        }
+
         $post->update($data);
 
-        // Redirect ke halaman semua postingan setelah update
         return redirect()->route('posts.all')->with('success', 'Postingan berhasil diperbarui!');
     }
 
     public function destroy($id)
     {
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
         $user = Auth::user();
         $post = Post::findOrFail($id);
 
-        // Hanya pemilik postingan atau admin yang bisa menghapus
         if ($user->role !== 'admin' && $user->id !== $post->user_id) {
             return redirect()->route('posts.all')->with('error', 'Anda tidak memiliki izin untuk menghapus postingan ini.');
         }
@@ -202,6 +231,10 @@ class PostController extends Controller
             }
         }
 
+        if ($post->dokumen) {
+            Storage::disk('public')->delete($post->dokumen);
+        }
+
         $post->delete();
 
         return redirect()->route('posts.all')->with('success', 'Postingan berhasil dihapus!');
@@ -209,8 +242,16 @@ class PostController extends Controller
 
     public function like($id)
     {
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
         $post = Post::findOrFail($id);
         $user = Auth::user();
+
+        if ($user->role === 'kontraktor' && (!$user->contractorProfile || !$user->contractorProfile->approved)) {
+            return redirect()->back()->with('error', 'Anda harus disetujui oleh admin terlebih dahulu untuk melakukan tindakan ini.');
+        }
 
         $existingLike = Like::where('user_id', $user->id)
                            ->where('post_id', $post->id)
@@ -230,12 +271,20 @@ class PostController extends Controller
 
     public function comment(Request $request, $id)
     {
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
         $request->validate([
             'content' => 'required|string|max:1000'
         ]);
 
         $post = Post::findOrFail($id);
         $user = Auth::user();
+
+        if ($user->role === 'kontraktor' && (!$user->contractorProfile || !$user->contractorProfile->approved)) {
+            return redirect()->back()->with('error', 'Anda harus disetujui oleh admin terlebih dahulu untuk mengirim komentar.');
+        }
 
         Comment::create([
             'user_id' => $user->id,

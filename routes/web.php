@@ -17,6 +17,9 @@ use App\Http\Controllers\NotificationController;
 
 
 Route::middleware('auth')->group(function () {
+
+    Route::post('orders/{id}/payment/{type}/stage/{stage}', [OrderController::class, 'uploadPaymentProof'])->name('orders.uploadPaymentProof');
+    Route::post('/bookings/{id}/final-approve', [BookingController::class, 'finalApprove'])->name('bookings.finalApprove');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->middleware('auth');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->middleware('auth');
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');

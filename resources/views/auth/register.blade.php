@@ -223,7 +223,7 @@
                 <img src="{{ asset('images/logo.png') }}" alt="Logo">
             </div>
             <h1>Create Account</h1>
-            <p>Sign up to join our modern vintage community with a touch of nature.</p>
+            <p>Membangun Kepercayaan, Menyelesaikan Proyek.</p>
         </div>
 
         <!-- Right Side (Form) -->
@@ -239,7 +239,7 @@
             <form method="POST" action="{{ route('register') }}" id="registerForm">
                 @csrf
                 <div class="form-group">
-                    <label for="name">Nama</label>
+                    <label for="name" id="name-label">Nama</label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}" required>
                 </div>
                 <div class="form-group">
@@ -279,6 +279,18 @@
             if (password !== confirmPassword) {
                 e.preventDefault();
                 alert('Password dan Konfirmasi Password tidak cocok!');
+            }
+        });
+
+        // Ubah label "Nama" menjadi "Perusahaan" saat memilih role "kontraktor"
+        document.getElementById('role').addEventListener('change', function () {
+            const nameLabel = document.getElementById('name-label');
+            const role = this.value;
+
+            if (role === 'kontraktor') {
+                nameLabel.textContent = 'Perusahaan';
+            } else {
+                nameLabel.textContent = 'Nama';
             }
         });
     </script>

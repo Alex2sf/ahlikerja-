@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Profile;
 use App\Models\Post;
 use App\Models\User;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -47,14 +46,14 @@ class ProfileController extends Controller
             'foto_profile' => 'nullable|image|max:2048',
             'nama_lengkap' => 'required|string|max:255',
             'nama_panggilan' => 'nullable|string|max:255',
-            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan', // Kapital sesuai view
+            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
             'tanggal_lahir' => 'nullable|date',
             'tempat_lahir' => 'nullable|string|max:255',
             'alamat_lengkap' => 'nullable|string',
             'nomor_telepon' => 'nullable|string|max:15',
             'email' => 'required|email|max:255|unique:profiles,email,' . ($profile->id ?? 'NULL'),
             'media_sosial.*' => 'nullable|string|max:255',
-            'bio' => 'nullable|string|max:500', // Tambahkan bio dengan batas maksimum
+            'bio' => 'nullable|string|max:500',
         ]);
 
         $data = $request->only([
@@ -63,7 +62,6 @@ class ProfileController extends Controller
         ]);
 
         if ($request->hasFile('foto_profile')) {
-            // Hapus foto lama jika ada
             if ($profile->foto_profile) {
                 Storage::disk('public')->delete($profile->foto_profile);
             }
@@ -81,6 +79,7 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui!');
     }
+
     public function showPublic($id)
     {
         $user = User::with('profile')->findOrFail($id);
@@ -93,5 +92,12 @@ class ProfileController extends Controller
                      ->get();
 
         return view('profile.public', compact('user', 'profile', 'posts'));
+    }
+
+    // Helper untuk memeriksa apakah profil sudah lengkap
+    public static function isProfileComplete($user)
+    {
+        $profile = $user->profile;
+        return $profile && !empty($profile->nama_lengkap) && !empty($profile->email);
     }
 }

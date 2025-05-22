@@ -40,9 +40,22 @@
                         <h3>Gambar Lama:</h3>
                         <div class="post-images">
                             @foreach ($post->gambar as $gambar)
-                                <img src="{{ Storage::url('posts/' . $gambar) }}" alt="Gambar Postingan">
+                                <img src="{{ Storage::url($gambar) }}" alt="Gambar Postingan">
                             @endforeach
                         </div>
+                    @endif
+                </div>
+
+                <div class="form-group">
+                    <label for="dokumen">Dokumen (PDF, Word, maks 5MB, dokumen lama akan diganti):</label>
+                    <input type="file" id="dokumen" name="dokumen" accept=".pdf,.doc,.docx">
+                    @error('dokumen')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
+                    @if ($post->dokumen)
+                        <p>Dokumen Lama: <a href="{{ Storage::url($post->dokumen) }}" target="_blank">Lihat Dokumen</a></p>
+                    @else
+                        <p>Tidak ada dokumen.</p>
                     @endif
                 </div>
 

@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Offer extends Model
 {
-    protected $fillable = ['contractor_id', 'post_id', 'accepted'];
+    protected $fillable = ['contractor_id', 'post_id', 'accepted', 'status'];
 
     public function contractor()
     {

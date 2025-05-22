@@ -52,17 +52,31 @@
                                 </span>
                             </p>
 
-                            <!-- Tampilkan Bukti Pembayaran jika ada -->
+                            <!-- Tampilkan Bukti Pembayaran untuk Setiap Tahap -->
+                            @if ($order->payment_stage > 0 || ($order->is_completed && $order->review))
+                                <div class="payment-details">
+                                    @if ($order->is_completed && $order->review && $order->review->pembayaran)
+                                        <div class="payment-stage">
+                                            <p class="order-detail"><strong>Bukti Pembayaran (Review):</strong></p>
+                                            <img src="{{ Storage::url($order->review->pembayaran) }}" alt="Bukti Pembayaran (Review)" class="payment-image">
+                                        </div>
+                                    @endif
+                                    @for ($i = 1; $i <= $order->payment_stage; $i++)
+                                        @if ($order->{"payment_proof_$i"})
+                                            <div class="payment-stage">
+                                                <p class="order-detail"><strong>Bukti Pembayaran Tahap {{ $i }}:</strong></p>
+                                                <img src="{{ Storage::url($order->{"payment_proof_$i"}) }}" alt="Bukti Pembayaran Tahap {{ $i }}" class="payment-image">
+                                            </div>
+                                        @endif
+                                    @endfor
+                                </div>
+                            @endif
+
+                            <!-- Tampilkan Ulasan jika ada -->
                             @if ($order->is_completed && $order->review)
                                 <div class="review-details">
                                     <p class="order-detail"><strong>Rating:</strong> {{ $order->review->rating }}/5</p>
                                     <p class="order-detail"><strong>Ulasan:</strong> {{ $order->review->review ?? 'Tidak ada ulasan' }}</p>
-                                    @if ($order->review->pembayaran)
-                                        <p class="order-detail"><strong>Bukti Pembayaran:</strong></p>
-                                        <img src="{{ Storage::url($order->review->pembayaran) }}" alt="Bukti Pembayaran" class="payment-image">
-                                    @else
-                                        <p class="order-detail"><strong>Bukti Pembayaran:</strong> Tidak ada bukti pembayaran.</p>
-                                    @endif
                                 </div>
                             @endif
 
@@ -226,9 +240,13 @@
             color: #856404;
         }
 
-        /* Review Details */
-        .review-details {
+        /* Payment Details */
+        .payment-details {
             margin-top: 10px;
+        }
+
+        .payment-stage {
+            margin-bottom: 15px;
         }
 
         .payment-image {
@@ -236,6 +254,11 @@
             height: auto;
             border-radius: 5px;
             margin-top: 5px;
+        }
+
+        /* Review Details */
+        .review-details {
+            margin-top: 10px;
         }
 
         /* Decoration Line */

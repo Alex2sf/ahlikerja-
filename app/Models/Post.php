@@ -10,7 +10,7 @@ class Post extends Model
 
     use LogsActivity;
     protected $fillable = [
-        'user_id', 'judul', 'deskripsi', 'gambar', 'lokasi', 'estimasi_anggaran', 'durasi'
+    'user_id', 'judul', 'deskripsi', 'gambar', 'dokumen', 'lokasi', 'estimasi_anggaran', 'durasi', 'status' // Tambahkan 'status'
     ];
 
     protected $casts = [

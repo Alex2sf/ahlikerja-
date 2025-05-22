@@ -28,10 +28,10 @@
                 <div class="form-group">
                     <label for="foto_profile">Foto Profil:</label>
                     @if ($profile->foto_profile)
-                    <img src="{{ Storage::url($profile->foto_profile) }}" alt="Foto Profil" class="profile-preview">
-                @else
-                    <div class="no-image">Tidak ada foto profil</div>
-                @endif
+                        <img src="{{ Storage::url($profile->foto_profile) }}" alt="Foto Profil" class="profile-preview">
+                    @else
+                        <div class="no-image">Tidak ada foto profil</div>
+                    @endif
                     <input type="file" name="foto_profile" id="foto_profile">
                     @error('foto_profile')
                         <span class="error">{{ $message }}</span>
@@ -45,7 +45,6 @@
                         <span class="error">{{ $message }}</span>
                     @enderror
                 </div>
-
 
                 <div class="form-group">
                     <label for="nomor_telepon">Nomor Telepon:</label>
@@ -65,8 +64,6 @@
                     @enderror
                 </div>
 
-
-
                 <div class="form-group">
                     <label for="nomor_npwp">Nomor NPWP:</label>
                     <input type="text" name="nomor_npwp" id="nomor_npwp" value="{{ old('nomor_npwp', $profile->nomor_npwp) }}" required>
@@ -83,13 +80,33 @@
                 </div>
 
                 <div class="form-group">
+                    <!-- Label dan Deskripsi Dokumen Pendukung -->
+                    <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #6b5848; margin-bottom: 15px;">
+                        Dokumen Pendukung Teknis & Administratif Perusahaan
+                    </h3>
+                    <div style="font-family: 'Roboto', sans-serif; font-size: 14px; color: #5a3e36; margin-bottom: 20px;">
+                        <p>Berikut adalah dokumen pendukung yang diperlukan untuk menunjukkan kesiapan teknis dan administratif perusahaan:</p>
+                        <ul style="padding-left: 20px;">
+                            <li><strong>Daftar Personel Inti:</strong> Daftar tenaga kerja utama (mandor, tukang ahli, teknisi, dll.) yang dilengkapi dengan sertifikat kompetensi seperti SKA atau SKT untuk meningkatkan kredibilitas.</li>
+                            <li><strong>Daftar Peralatan Kerja:</strong> Inventaris alat kerja (scaffolding, concrete mixer, alat bor, dll.) yang dimiliki atau disewa, disertai bukti kepemilikan atau dokumen sewa jika diperlukan.</li>
+                            <li><strong>Pengalaman Proyek:</strong> Rekam jejak proyek yang pernah dikerjakan, mencakup nama proyek, lokasi, tahun, nilai kontrak, dan kontak pemberi kerja.</li>
+                            <li><strong>Dokumentasi Proyek:</strong> Foto tahap pre-construction, progres, hingga hasil akhir proyek. Testimoni klien dapat dilampirkan (opsional).</li>
+                            <li><strong>Formulir Penawaran:</strong> Dokumen untuk tender, berisi penawaran teknis (metodologi, jadwal, tenaga kerja, alat) dan harga sesuai ketentuan pemberi proyek.</li>
+                            <li><strong>Surat Pernyataan Kebenaran Dokumen:</strong> Surat resmi yang menyatakan semua dokumen yang diajukan sah, ditandatangani pimpinan perusahaan dengan stempel resmi.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Input Dokumen Pendukung -->
                     <label for="dokumen_pendukung">Dokumen Pendukung (unggah multiple):</label>
                     <input type="file" name="dokumen_pendukung[]" id="dokumen_pendukung" multiple>
                     {{-- @if ($profile->dokumen_pendukung && count($profile->dokumen_pendukung) > 0)
                         <h4>Dokumen Pendukung Saat Ini:</h4>
                         <ul class="document-list">
-                            @foreach ($profile->dokumen_pendukung as $doc)
-                                <li><a href="{{ Storage::url('contractors/documents/' . $doc) }}" target="_blank">{{ basename($doc) }}</a></li>
+                            @foreach ($profile->dokumen_pendukung as $index => $doc)
+                                <li>
+                                    <a href="{{ Storage::url($doc) }}" target="_blank">{{ basename($doc) }}</a>
+                                    <a href="{{ route('contractor.profile.delete', ['type' => 'dokumen', 'index' => $index]) }}" class="delete-link" onclick="return confirm('Yakin ingin menghapus dokumen ini?')">Hapus</a>
+                                </li>
                             @endforeach
                         </ul>
                     @endif --}}
@@ -101,11 +118,11 @@
                     {{-- @if ($profile->portofolio && count($profile->portofolio) > 0)
                         <h4>Portofolio Saat Ini:</h4>
                         <ul class="portfolio-grid">
-                            @foreach ($profile->portofolio as $port)
+                            @foreach ($profile->portofolio as $index => $port)
                                 @php
                                     $extension = strtolower(pathinfo($port, PATHINFO_EXTENSION));
                                     $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                                    $url = Storage::url('contractors/portfolios/' . $port);
+                                    $url = Storage::url($port);
                                 @endphp
                                 <li>
                                     @if (in_array($extension, $imageExtensions))
@@ -115,23 +132,47 @@
                                     @else
                                         <a href="{{ $url }}" target="_blank" class="item-link">{{ basename($port) }}</a>
                                     @endif
+                                    <a href="{{ route('contractor.profile.delete', ['type' => 'portofolio', 'index' => $index]) }}" class="delete-link" onclick="return confirm('Yakin ingin menghapus portofolio ini?')">Hapus</a>
                                 </li>
                             @endforeach
                         </ul>
                     @endif --}}
                 </div>
 
+
+
                 <div class="form-group">
-                    <label for="identity_images">GAMBAR DATA DIRI (unggah multiple):</label>
-                    <input type="file" name="identity_images[]" id="identity_images" multiple>
-                    {{-- @if ($profile->identity_images && count($profile->identity_images) > 0)
-                        <h4>Gambar Data Diri Saat Ini:</h4>
-                        <ul class="image-list">
-                            @foreach ($profile->identity_images as $image)
+                    <!-- Label dan Deskripsi Dokumen Legalitas -->
+                    <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: #6b5848; margin-bottom: 15px;">
+                        Dokumen Legalitas Perusahaan & Perizinan Usaha
+                    </h3>
+                    <div style="font-family: 'Roboto', sans-serif; font-size: 14px; color: #5a3e36; margin-bottom: 20px;">
+                        <p>Berikut adalah dokumen legalitas yang diperlukan untuk memastikan perusahaan Anda terdaftar secara resmi dan dapat beroperasi secara legal:</p>
+                        <ul style="padding-left: 20px;">
+                            <li><strong>Akta Pendirian Perusahaan:</strong> Dokumen legal yang dibuat oleh notaris, berisi informasi tentang pendirian perusahaan, termasuk nama, tujuan usaha, struktur kepemilikan, dan modal dasar.</li>
+                            <li><strong>SK Kemenkumham:</strong> Pengesahan resmi dari Kementerian Hukum dan HAM terhadap Akta Pendirian Perusahaan.</li>
+                            <li><strong>NIB (Nomor Induk Berusaha):</strong> Identitas resmi perusahaan yang diterbitkan melalui sistem OSS, menggantikan TDP, SIUP, dan lainnya.</li>
+                            <li><strong>NPWP Perusahaan:</strong> Nomor yang menunjukkan perusahaan terdaftar sebagai subjek pajak badan.</li>
+                            <li><strong>SKT (Surat Keterangan Terdaftar Pajak):</strong> Bukti pendaftaran aktif perusahaan di kantor pajak.</li>
+                            <li><strong>SBU (Sertifikat Badan Usaha):</strong> Sertifikat untuk perusahaan jasa konstruksi, menunjukkan klasifikasi dan kualifikasi usaha.</li>
+                            <li><strong>IUJK (Izin Usaha Jasa Konstruksi):</strong> Izin resmi dari pemerintah daerah untuk perusahaan jasa konstruksi.</li>
+                            <li><strong>TDP (Nomor Induk Perusahaan Lama):</strong> Kini digantikan oleh NIB, sebelumnya wajib dimiliki setiap badan usaha.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Input Dokumen Legalitas -->
+                    <label for="legalitas">Dokumen Legalitas (unggah multiple, PDF/Word, maks 5MB):</label>
+                    <input type="file" name="legalitas[]" id="legalitas" multiple accept=".pdf,.doc,.docx">
+                    @error('legalitas.*')
+                        <span class="error">{{ $message }}</span>
+                    @enderror
+                    {{-- @if ($profile->legalitas && count($profile->legalitas) > 0)
+                        <h4>Dokumen Legalitas Saat Ini:</h4>
+                        <ul class="document-list">
+                            @foreach ($profile->legalitas as $index => $doc)
                                 <li>
-                                    <a href="{{ Storage::url($image) }}" target="_blank">
-                                        <img src="{{ Storage::url($image) }}" alt="Gambar Data Diri" class="item-image">
-                                    </a>
+                                    <a href="{{ Storage::url($doc) }}" target="_blank">{{ basename($doc) }}</a>
+                                    <a href="{{ route('contractor.profile.delete', ['type' => 'legalitas', 'index' => $index]) }}" class="delete-link" onclick="return confirm('Yakin ingin menghapus dokumen legalitas ini?')">Hapus</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -257,6 +298,7 @@
             object-fit: cover;
             border-radius: 50%;
             border: 2px solid #e0d8c9;
+            margin-bottom: 10px;
         }
 
         .document-list, .portfolio-grid, .image-list {
@@ -264,10 +306,24 @@
             padding: 0;
         }
 
+        .document-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
         .portfolio-grid, .image-list {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
+        }
+
+        .portfolio-grid li, .image-list li {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
         }
 
         .item-link {
@@ -292,6 +348,16 @@
 
         .item-image:hover {
             transform: scale(1.05);
+        }
+
+        .delete-link {
+            color: #dc3545;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .delete-link:hover {
+            text-decoration: underline;
         }
 
         .error {

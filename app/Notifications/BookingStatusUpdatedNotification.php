@@ -13,12 +13,14 @@ class BookingStatusUpdatedNotification extends Notification
     protected $booking;
     protected $status;
     protected $declineReason;
+    protected $customMessage;
 
-    public function __construct($booking, $status, $declineReason = null)
+    public function __construct($booking, $status, $declineReason = null, $customMessage = null)
     {
         $this->booking = $booking;
         $this->status = $status;
         $this->declineReason = $declineReason;
+        $this->customMessage = $customMessage; // Untuk pesan kustom seperti pada final approve
     }
 
     public function via($notifiable)
@@ -28,10 +30,14 @@ class BookingStatusUpdatedNotification extends Notification
 
     public function toDatabase($notifiable)
     {
-        $message = $this->status === 'accepted'
-            ? "Pesanan Anda '{$this->booking->judul}' telah diterima oleh kontraktor."
-            : "Pesanan Anda '{$this->booking->judul}' telah ditolak oleh kontraktor."
-                . ($this->declineReason ? " Alasan: {$this->declineReason}" : "");
+        if ($this->status === 'final_approve') {
+            $message = $this->customMessage ?? "User {$this->booking->user->name} telah memberikan final approve untuk pesanan '{$this->booking->judul}'.";
+        } else {
+            $message = $this->status === 'accepted'
+                ? "Pesanan Anda '{$this->booking->judul}' telah diterima oleh kontraktor."
+                : "Pesanan Anda '{$this->booking->judul}' telah ditolak oleh kontraktor."
+                    . ($this->declineReason ? " Alasan: {$this->declineReason}" : "");
+        }
 
         return [
             'booking_id' => $this->booking->id,

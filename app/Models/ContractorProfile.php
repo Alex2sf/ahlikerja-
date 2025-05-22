@@ -12,7 +12,7 @@ class ContractorProfile extends Model
     protected $fillable = [
         'user_id', 'foto_profile', 'nomor_telepon',
         'alamat', 'perusahaan', 'nomor_npwp', 'bidang_usaha', 'dokumen_pendukung',
-        'portofolio', 'approved', 'admin_note', 'identity_images', 'bio'
+        'portofolio', 'approved', 'admin_note', 'legalitas', 'bio'
     ];
 
     protected $casts = [
@@ -20,6 +20,7 @@ class ContractorProfile extends Model
         'dokumen_pendukung' => 'array',
         'portofolio' => 'array',
         'identity_images' => 'array', // Cast sebagai array untuk JSON
+        'legalitas' => 'array', // Cast sebagai array untuk JSON
         'approved' => 'boolean'
     ];
 

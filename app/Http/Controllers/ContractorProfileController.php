@@ -17,6 +17,7 @@ class ContractorProfileController extends Controller
                            ->whereHas('contractorProfile', function ($query) {
                                $query->where('approved', true);
                            })
+                           ->orderBy('created_at', 'desc') // Tambahkan pengurutan di sini juga jika diperlukan
                            ->get();
 
         return view('welcome', compact('contractors'));
@@ -42,7 +43,7 @@ class ContractorProfileController extends Controller
             'bidang_usaha.*' => 'nullable|string|max:255',
             'dokumen_pendukung.*' => 'nullable|file|max:2048',
             'portofolio.*' => 'nullable|file|max:2048',
-            'identity_images.*' => 'nullable|image|max:2048',
+            'legalitas.*' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'bio' => 'nullable|string|max:500',
         ]);
 
@@ -50,7 +51,6 @@ class ContractorProfileController extends Controller
             'nomor_telepon', 'alamat', 'perusahaan', 'nomor_npwp', 'bio'
         ]);
 
-        // Handle foto profil
         if ($request->hasFile('foto_profile')) {
             if ($profile->foto_profile) {
                 Storage::disk('public')->delete($profile->foto_profile);
@@ -58,10 +58,8 @@ class ContractorProfileController extends Controller
             $data['foto_profile'] = $request->file('foto_profile')->store('contractors', 'public');
         }
 
-        // Handle bidang usaha
         $data['bidang_usaha'] = array_filter($request->input('bidang_usaha', []));
 
-        // Handle dokumen pendukung
         if ($request->hasFile('dokumen_pendukung')) {
             $dokumenPendukung = $profile->dokumen_pendukung ?? [];
             foreach ($request->file('dokumen_pendukung') as $file) {
@@ -70,7 +68,6 @@ class ContractorProfileController extends Controller
             $data['dokumen_pendukung'] = $dokumenPendukung;
         }
 
-        // Handle portofolio
         if ($request->hasFile('portofolio')) {
             $portofolio = $profile->portofolio ?? [];
             foreach ($request->file('portofolio') as $file) {
@@ -79,13 +76,12 @@ class ContractorProfileController extends Controller
             $data['portofolio'] = $portofolio;
         }
 
-        // Handle identity images
-        if ($request->hasFile('identity_images')) {
-            $identityImages = $profile->identity_images ?? [];
-            foreach ($request->file('identity_images') as $image) {
-                $identityImages[] = $image->store('contractors/identity', 'public');
+        if ($request->hasFile('legalitas')) {
+            $legalitas = $profile->legalitas ?? [];
+            foreach ($request->file('legalitas') as $file) {
+                $legalitas[] = $file->store('contractors/legalitas', 'public');
             }
-            $data['identity_images'] = $identityImages;
+            $data['legalitas'] = $legalitas;
         }
 
         if ($profile->exists) {
@@ -153,19 +149,14 @@ class ContractorProfileController extends Controller
             });
         }
 
+        // Urutkan kontraktor dari terbaru ke terlama berdasarkan created_at
+        $query->orderBy('created_at', 'desc');
+
         $contractors = $query->get();
 
         return view('contractor.index', compact('contractors', 'bidangUsahaOptions'));
     }
 
-    /**
-     * Menghapus file dari dokumen pendukung, portofolio, atau gambar data diri
-     *
-     * @param Request $request
-     * @param string $type Tipe file (dokumen, portofolio, atau gambar)
-     * @param int $index Indeks file dalam array
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function deleteFile(Request $request, $type, $index)
     {
         $profile = Auth::user()->contractorProfile;
@@ -184,29 +175,25 @@ class ContractorProfileController extends Controller
                 $field = 'portofolio';
                 $storagePathPrefix = 'contractors/portfolios/';
                 break;
-            case 'gambar':
-                $field = 'identity_images';
-                $storagePathPrefix = 'contractors/identity/';
+            case 'legalitas':
+                $field = 'legalitas';
+                $storagePathPrefix = 'contractors/legalitas/';
                 break;
             default:
                 return redirect()->route('contractor.profile.show')->with('error', 'Tipe file tidak valid.');
         }
 
-        // Ambil data dari kolom JSON sebagai array
         $fileArray = $profile->$field ?? [];
         if (!is_array($fileArray) || !array_key_exists($index, $fileArray)) {
             return redirect()->route('contractor.profile.show')->with('error', 'File tidak ditemukan.');
         }
 
-        // Hapus file dari storage
         $filePath = $fileArray[$index];
-        Storage::disk('public')->delete($storagePathPrefix . $filePath);
+        Storage::disk('public')->delete($filePath);
 
-        // Hapus elemen dari array
         unset($fileArray[$index]);
-        $fileArray = array_values($fileArray); // Reindex array
+        $fileArray = array_values($fileArray);
 
-        // Simpan kembali array ke kolom JSON
         $profile->$field = $fileArray;
         $profile->save();
 

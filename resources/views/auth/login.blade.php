@@ -201,7 +201,7 @@
                 <img src="{{ asset('images/logo.png') }}" alt="Logo">
             </div>
             <h1>Welcome Back</h1>
-            <p>Login to explore our modern vintage solutions with a touch of nature.</p>
+            <p>Membangun Kepercayaan, Menyelesaikan Proyek.</p>
         </div>
 
         <!-- Right Side (Form) -->

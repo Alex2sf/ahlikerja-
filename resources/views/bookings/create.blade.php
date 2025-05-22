@@ -59,6 +59,14 @@
                             <li><span class="status declined">Menolak proyek</span>: Anda akan diberi alasan dan bisa memilih kontraktor lain.</li>
                         </ul>
                     </li>
+                    <li>
+                        <strong>6. Kontraktor merespons dan mengirim file final setelah diskusi dichat  </strong>
+                        <p>Dokumen atau gambar akhir disesuaikan berdasarkan hasil diskusi dengan klien.</p>
+                    </li>
+                    <li>
+                        <strong>7. Client yang memesan akan memberikan final approve terjadinya kesepakatan</strong>
+                        <p>Setelah semua disepakati, proyek bisa dimulai sesuai jadwal yang ditentukan.</p>
+                    </li>
                 </ul>
             </div>
 

@@ -1,14 +1,16 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use App\Notifications\NewMessageNotification;
 
 class ChatController extends Controller
 {
-
     public function index($receiverId = null)
     {
         $user = Auth::user();
@@ -48,16 +50,39 @@ class ChatController extends Controller
 
     public function store(Request $request, $receiverId)
     {
-        $request->validate(['message' => 'required|string|max:1000']);
+        if (!ProfileController::isProfileComplete(Auth::user())) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
+        $sender = Auth::user();
         $receiver = User::findOrFail($receiverId);
 
-        Chat::create([
-            'sender_id' => Auth::id(),
-            'receiver_id' => $receiver->id,
-            'message' => $request->message,
-            'is_read' => false,
+        if ($sender->role === 'kontraktor' && (!$sender->contractorProfile || !$sender->contractorProfile->approved)) {
+            return redirect()->back()->with('error', 'Anda harus disetujui oleh admin terlebih dahulu untuk mengirim chat.');
+        }
+
+        $request->validate([
+            'message' => 'required|string|max:1000',
+            'attachment' => 'nullable|file|max:2048'
         ]);
 
-        return redirect()->route('chats.index', $receiver->id)->with('success', 'Pesan berhasil dikirim!');
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $attachment = $request->file('attachment');
+            $fileName = time() . '_' . uniqid() . '.' . $attachment->extension();
+            $attachmentPath = $attachment->storeAs('chats', $fileName, 'public');
+        }
+
+        $chat = Chat::create([
+            'sender_id' => $sender->id,
+            'receiver_id' => $receiver->id,
+            'message' => $request->message,
+            'attachment' => $attachmentPath,
+            'is_read' => false
+        ]);
+
+        $receiver->notify(new NewMessageNotification($chat));
+
+        return redirect()->back()->with('success', 'Pesan berhasil dikirim!');
     }
 }
