@@ -8,10 +8,11 @@ use App\Models\Comment;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 class User extends Authenticatable
 {
 
-    use LogsActivity, Notifiable;
+    use HasFactory, LogsActivity, Notifiable;
     protected $fillable = [
         'name', 'email', 'password', 'role'
     ];

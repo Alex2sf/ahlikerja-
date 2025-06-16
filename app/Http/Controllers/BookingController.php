@@ -69,12 +69,28 @@ class BookingController extends Controller
         $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
-            'gambar' => 'nullable|array',
-            'gambar.*' => 'image|max:2048',
-            'dokumen' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+            'gambar' => 'required|array|min:1', // Gambar wajib diisi, minimal 1 file
+            'gambar.*' => 'image|mimes:jpeg,png,jpg|max:2048', // Validasi gambar hanya boleh jpeg, png, jpg
+            'dokumen' => 'required|file|mimes:pdf,doc,docx|max:5120', // Dokumen wajib diisi
             'lokasi' => 'required|string|max:255',
-            'estimasi_anggaran' => 'required|numeric',
-            'durasi' => 'required|string|max:100'
+            'estimasi_anggaran' => 'required|numeric|min:10000', // Minimal 5 digit (Rp 10,000)
+            'durasi' => [
+                'required',
+                'string',
+                'max:100',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/^(?!.*\d).*$/', $value) || !preg_match('/(hari|minggu|bulan)/i', $value)) {
+                        $fail('Durasi harus menyertakan angka dan satuan "hari", "minggu", atau "bulan" (contoh: 3 hari, 1 minggu, 2 bulan). ISI ULANG GAMBAR DAN DOKUMEN');
+                    }
+                },
+            ],
+        ], [
+            'gambar.required' => 'Gambar wajib diunggah.',
+            'gambar.min' => 'Minimal 1 gambar harus diunggah.',
+            'gambar.*.mimes' => 'Gambar hanya boleh berformat JPEG, PNG, atau JPG.',
+            'dokumen.required' => 'Dokumen wajib diunggah.',
+            'estimasi_anggaran.min' => 'Estimasi anggaran minimal Rp 10,000.',
+            'durasi' => 'Durasi harus menyertakan angka dan satuan "hari", "minggu", atau "bulan" (contoh: 3 hari, 1 minggu, 2 bulan). ISI ULANG GAMBAR DAN DOKUMEN',
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'lokasi', 'estimasi_anggaran', 'durasi']);
@@ -107,12 +123,12 @@ class BookingController extends Controller
             'estimasi_anggaran' => $data['estimasi_anggaran'],
             'durasi' => $data['durasi'],
             'status' => 'pending',
-            'deadline' => Carbon::now()->addHours(24),
+            'deadline' => Carbon::now()->addWeek(),
         ]);
 
         $contractor->notify(new BookingCreatedNotification($booking));
 
-        return redirect()->route('bookings.index')->with('success', 'Pesanan berhasil dibuat dan menunggu persetujuan kontraktor dalam 24 jam!');
+        return redirect()->route('bookings.index')->with('success', 'Pesanan berhasil dibuat dan menunggu persetujuan kontraktor dalam 1 minggu!');
     }
 
     public function index()
@@ -137,7 +153,7 @@ class BookingController extends Controller
                         $booking,
                         'expired',
                         null,
-                        "Pesanan '{$booking->judul}' telah hangus karena tidak ada tindakan dalam 24 jam."
+                        "Pesanan '{$booking->judul}' telah hangus karena tidak ada tindakan dalam 1 minggu."
                     ));
                 }
             }
@@ -205,7 +221,6 @@ class BookingController extends Controller
             return redirect()->back()->with('error', 'Pemesanan ini sudah ditandai selesai.');
         }
 
-        // Validasi input untuk pembayaran terakhir dan review
         $request->validate([
             'payment_proof' => 'required|image|max:2048',
             'rating' => 'required|integer|between:1,5',

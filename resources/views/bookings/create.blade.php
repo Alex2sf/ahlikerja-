@@ -5,9 +5,21 @@
 @section('content')
     <div class="container">
         <div class="booking-form-section">
+            <!-- Back Link -->
+            <div class="back-link-top">
+                <a href="{{ url()->previous() }}" class="btn btn-secondary">Kembali</a>
+            </div>
+
             <h1>Pesan Kontraktor: {{ $contractor->name }}</h1>
             @if (session('error'))
                 <div class="notification error">{{ session('error') }}</div>
+            @endif
+            @if ($errors->any())
+                <div class="notification error">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
             @endif
 
             <!-- Panduan Pengisian Formulir -->
@@ -23,13 +35,13 @@
                             <li>Lokasi tanah dan luas bangunan</li>
                             <li>Kebutuhan ruang (jumlah kamar, dapur, dll.)</li>
                             <li>Preferensi material dan anggaran</li>
-                            <li>Target waktu pelaksanaan</li>
+                            <li>Target waktu pelaksanaan (contoh: 3 hari, 1 minggu, 2 bulan)</li>
                         </ul>
                         <p><em>Tips: Semakin detail informasi yang Anda berikan, semakin mudah bagi kontraktor memahami kebutuhan Anda.</em></p>
                     </li>
                     <li>
-                        <strong>2. Upload Gambar Pendukung (Opsional tapi Disarankan)</strong>
-                        <p>Unggah file seperti:</p>
+                        <strong>2. Upload Gambar Pendukung (Wajib)</strong>
+                        <p>Unggah minimal satu file seperti:</p>
                         <ul>
                             <li>Denah kasar atau sketsa tangan</li>
                             <li>Gambar inspirasi dari internet</li>
@@ -37,15 +49,15 @@
                         </ul>
                     </li>
                     <li>
-                        <strong>3. Buat dan Unggah Surat Perjanjian Kerja (SPK)</strong>
-                        <p>Setelah form dan gambar dikirim, Anda dapat menyusun Surat Perjanjian Kerja berisi:</p>
+                        <strong>3. Buat dan Unggah Surat Perjanjian Kerja (SPK) (Wajib)</strong>
+                        <p>Anda harus menyusun dan mengunggah Surat Perjanjian Kerja berisi:</p>
                         <ul>
                             <li>Rincian pekerjaan</li>
                             <li>Estimasi anggaran</li>
-                            <li>Jadwal pelaksanaan</li>
+                            <li>Jadwal pelaksanaan (contoh: 3 hari, 1 minggu, 2 bulan)</li>
                             <li>Ketentuan pembayaran</li>
                         </ul>
-                        <p><em>Catatan: Template SPK bisa kami bantu sediakan jika diperlukan.</em></p>
+                        <p><em>Catatan: Template SPK tersedia untuk diunduh jika diperlukan.</em></p>
                     </li>
                     <li>
                         <strong>4. Kirim Semua Dokumen ke Kontraktor</strong>
@@ -60,7 +72,7 @@
                         </ul>
                     </li>
                     <li>
-                        <strong>6. Kontraktor merespons dan mengirim file final setelah diskusi dichat  </strong>
+                        <strong>6. Kontraktor merespons dan mengirim file final setelah diskusi dichat</strong>
                         <p>Dokumen atau gambar akhir disesuaikan berdasarkan hasil diskusi dengan klien.</p>
                     </li>
                     <li>
@@ -71,7 +83,7 @@
             </div>
 
             <!-- Form Pemesanan -->
-            <form method="POST" action="{{ route('bookings.store', $contractor->id) }}" enctype="multipart/form-data" class="booking-form">
+            <form method="POST" action="{{ route('bookings.store', $contractor->id) }}" enctype="multipart/form-data" class="booking-form" id="bookingForm">
                 @csrf
                 <div class="form-group">
                     <label for="judul">Judul:</label>
@@ -111,15 +123,18 @@
                     @enderror
                 </div>
                 <div class="form-group">
-                    <label for="gambar">Gambar (unggah multiple):</label>
-                    <input type="file" id="gambar" name="gambar[]" multiple>
-                    @error('gambar')
+                    <label for="gambar">Gambar (unggah minimal 1, hanya JPEG/PNG/JPG, maks 2MB):</label>
+                    <small class="form-text" style="color: red; font-weight: bold;">
+                        Mengunggah file baru akan menghapus file sebelumnya. Pastikan file yang dipilih sudah benar.
+                    </small>
+                    <input type="file" id="gambar" name="gambar[]" multiple accept="image/jpeg,image/png,image/jpg" required>
+                    @error('gambar.*')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="form-group">
-                    <label for="dokumen">Dokumen (PDF, Word, maks 5MB):</label>
-                    <input type="file" id="dokumen" name="dokumen" accept=".pdf,.doc,.docx">
+                    <label for="dokumen">Dokumen (PDF, Word, maks 5MB, wajib):</label>
+                    <input type="file" id="dokumen" name="dokumen" accept=".pdf,.doc,.docx" required>
                     @error('dokumen')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
@@ -132,25 +147,21 @@
                     @enderror
                 </div>
                 <div class="form-group">
-                    <label for="estimasi_anggaran">Estimasi Anggaran:</label>
-                    <input type="number" id="estimasi_anggaran" name="estimasi_anggaran" step="0.01" value="{{ old('estimasi_anggaran') }}" required>
+                    <label for="estimasi_anggaran">Estimasi Anggaran (minimal Rp 10,000):</label>
+                    <input type="number" id="estimasi_anggaran" name="estimasi_anggaran" step="0.01" value="{{ old('estimasi_anggaran') }}" required min="10000">
                     @error('estimasi_anggaran')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="form-group">
-                    <label for="durasi">Durasi:</label>
-                    <input type="text" id="durasi" name="durasi" placeholder="Contoh: 2 minggu, 1 bulan" value="{{ old('durasi') }}" required>
+                    <label for="durasi">Durasi (contoh: 3 hari, 1 minggu, 2 bulan):</label>
+                    <input type="text" id="durasi" name="durasi" placeholder="Contoh: 3 hari, 1 minggu, 2 bulan" value="{{ old('durasi') }}" required>
                     @error('durasi')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
                 <button type="submit" class="btn btn-primary">Pesan</button>
             </form>
-
-            <div class="back-link">
-                <a href="{{ route('contractors.index') }}" class="btn btn-secondary">Kembali ke Daftar Kontraktor</a>
-            </div>
         </div>
     </div>
 
@@ -164,6 +175,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
+            position: relative; /* Untuk positioning tombol */
         }
 
         .booking-form-section h1 {
@@ -172,6 +184,13 @@
             color: #5a3e36;
             text-align: center;
             margin-bottom: 30px;
+        }
+
+        /* Back Link di Pojok Kiri Atas */
+        .back-link-top {
+            position: absolute;
+            top: 15px;
+            left: 15px;
         }
 
         /* Guidelines Section */
@@ -384,12 +403,6 @@
             background-color: #c7b9a1;
         }
 
-        /* Back Link */
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
         /* Responsive Design */
         @media (max-width: 768px) {
             .booking-form-section {
@@ -410,9 +423,66 @@
             }
 
             .btn {
-                width: 100%;
-                text-align: center;
+                width: auto;
+                padding: 8px 16px;
+            }
+
+            .back-link-top {
+                top: 10px;
+                left: 10px;
             }
         }
     </style>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cek apakah ada error validasi (artinya form gagal disubmit)
+        @if ($errors->any())
+            // Reset hanya field gambar dan dokumen
+            document.getElementById('gambar').value = '';
+            document.getElementById('dokumen').value = '';
+        @endif
+
+        // Validasi ukuran file dan keberadaan file sebelum submit
+        document.getElementById('bookingForm').addEventListener('submit', function(event) {
+            const gambarInput = document.getElementById('gambar');
+            const dokumenInput = document.getElementById('dokumen');
+            const maxGambarSize = 2 * 1024 * 1024; // 2MB dalam bytes
+            const maxDokumenSize = 5 * 1024 * 1024; // 5MB dalam bytes
+            let hasError = false;
+
+            // Validasi Gambar wajib diisi
+            if (gambarInput.files.length === 0) {
+                alert('Gambar wajib diunggah. Silakan pilih minimal 1 gambar.');
+                hasError = true;
+            } else {
+                // Validasi ukuran gambar
+                for (let file of gambarInput.files) {
+                    if (file.size > maxGambarSize) {
+                        alert('Ukuran salah satu gambar melebihi 2MB. Silakan pilih file yang lebih kecil.');
+                        hasError = true;
+                        break;
+                    }
+                }
+            }
+
+            // Validasi Dokumen wajib diisi
+            if (dokumenInput.files.length === 0) {
+                alert('Dokumen wajib diunggah. Silakan pilih sebuah dokumen.');
+                hasError = true;
+            } else {
+                // Validasi ukuran dokumen
+                if (dokumenInput.files[0].size > maxDokumenSize) {
+                    alert('Ukuran dokumen melebihi 5MB. Silakan pilih file yang lebih kecil.');
+                    hasError = true;
+                }
+            }
+
+            // Jika ada error, batalkan submit
+            if (hasError) {
+                event.preventDefault();
+            }
+        });
+    });
+    </script>
 @endsection

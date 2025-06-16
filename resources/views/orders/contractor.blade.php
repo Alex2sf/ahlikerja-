@@ -6,7 +6,7 @@
     <div class="containers">
         <!-- Header Section -->
         <div class="order-header" style="background-color: #a8c3b8; padding: 20px; border-radius: 10px 10px 0 0;">
-            <h1 class="text-center text-white">Keranjang Pemesanan Saya (Kontraktor)</h1>
+            <h1 class="text-center text-white">Tender Pembayaran</h1>
         </div>
 
         <!-- Notifikasi -->
@@ -15,6 +15,23 @@
                 {{ session('success') }}
             </div>
         @endif
+
+        <!-- Back Link (Dipindahkan ke atas order-content dan sejajar kiri) -->
+        <div class="back-link" style="text-align: left; margin-bottom: 20px;">
+            <a href="{{ route('home') }}"
+            class="btn"
+            style="background-color: #D2B48C;;     /* coklat muda (peru) */
+                    color: #3e2723;              /* coklat tua untuk teks */
+                    font-weight: 600;
+                    padding: 6px 14px;
+                    font-size: 0.95rem;
+                    border: none;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                Kembali ke Home
+            </a>
+        </div>
+
 
         <!-- Order Content -->
         <div class="order-content">
@@ -85,11 +102,6 @@
                     @endforeach
                 </div>
             @endif
-        </div>
-
-        <!-- Back Link -->
-        <div class="back-link">
-            <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
         </div>
     </div>
 

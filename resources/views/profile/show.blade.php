@@ -3,392 +3,361 @@
 @section('title', 'Profil Saya')
 
 @section('content')
-    <div class="containers">
+    <div class="profile-container">
         <!-- Notifikasi -->
         @if (session('info'))
-            <div class="notification alert-info">{{ session('info') }}</div>
+            <div class="notification info">{{ session('info') }}</div>
+        @endif
+        @if (session('success'))
+            <div class="notification success">{{ session('success') }}</div>
         @endif
 
-        <div class="profile-section">
-            <!-- Bagian Informasi Profil -->
-            <div class="profile-info">
+        <div class="profile-header">
+            <div class="profile-avatar">
                 <img src="{{ $profile && $profile->foto_profile ? asset('storage/' . $profile->foto_profile) : asset('images/default-profile.png') }}"
                      alt="Foto Profil {{ $profile->nama_lengkap ?? 'User' }}">
-                <h1>{{ $profile->nama_lengkap }}</h1>
-                <p>{{ $profile->nama_panggilan ?? 'Tidak diisi' }}</p>
-                <p>{{ $profile->bio ?? 'Tidak ada bio.' }}</p>
+                <div class="avatar-overlay">
+                    <a href="{{ route('profile.edit') }}" class="edit-avatar-btn">Ubah Foto</a>
+                </div>
             </div>
-
-            <!-- Bagian Detail Profil -->
-            <div class="profile-details">
-                <div>
-                    <h2>Jenis Kelamin</h2>
-                    <p>{{ $profile->jenis_kelamin ?? 'Tidak diisi' }}</p>
-                </div>
-                <div>
-                    <h2>Tanggal Lahir</h2>
-                    <p>{{ $profile->tanggal_lahir ? $profile->tanggal_lahir->format('d F Y') : 'Tidak diisi' }}</p>
-                </div>
-                <div>
-                    <h2>Tempat Lahir</h2>
-                    <p>{{ $profile->tempat_lahir ?? 'Tidak diisi' }}</p>
-                </div>
-                <div>
-                    <h2>Alamat Lengkap</h2>
-                    <p>{{ $profile->alamat_lengkap ?? 'Tidak diisi' }}</p>
-                </div>
-                <div>
-                    <h2>Nomor Telepon</h2>
-                    <p>{{ $profile->nomor_telepon ?? 'Tidak diisi' }}</p>
-                </div>
-                <div>
-                    <h2>Email</h2>
-                    <p>{{ $profile->email }}</p>
-                </div>
-                <div>
-                    <h2>Media Sosial</h2>
-                    @if ($profile->media_sosial && count($profile->media_sosial) > 0)
-                        <ul>
-                            @foreach ($profile->media_sosial as $media)
-                                <li>{{ $media ?? 'Tidak diisi' }}</li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <p>Tidak ada media sosial yang diisi.</p>
+            <div class="profile-title">
+                <h1>{{ $profile->nama_lengkap }}</h1>
+                <p class="profile-subtitle">{{ $profile->nama_panggilan ?? '' }}</p>
+                <div class="profile-meta">
+                    @if($profile->jenis_kelamin)
+                        <span class="meta-item"><i class="fas fa-venus-mars"></i> {{ $profile->jenis_kelamin }}</span>
+                    @endif
+                    @if($profile->tanggal_lahir)
+                        <span class="meta-item"><i class="fas fa-birthday-cake"></i> {{ $profile->tanggal_lahir->format('d F Y') }}</span>
                     @endif
                 </div>
             </div>
-
-            <!-- Tombol Edit dan Kembali -->
-            <div class="button-group">
-                <a href="{{ route('profile.edit') }}" class="btn btn-primary">Edit Profil</a>
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
-            </div>
         </div>
 
-        <!-- Posts Section (Right Column) -->
-        <div class="posts-section">
-            <h1>Daftar Postingan Saya</h1>
-            @if (session('success'))
-                <div class="notification alert-success">{{ session('success') }}</div>
-            @endif
-            @if ($posts->isEmpty())
-                <p class="text-center text-muted">Tidak ada postingan.</p>
-            @else
-                @foreach ($posts as $post)
-                    <div class="post-card">
-                        <h2>{{ $post->judul }}</h2>
-                        <p>{{ $post->deskripsi }}</p>
-                        <!-- Tampilkan Gambar -->
-                        @if ($post->gambar && count($post->gambar) > 0)
-                        <h3>Gambar:</h3>
-                        <div class="post-images">
-                            @foreach ($post->gambar as $gambar)
-                                <img src="{{ Storage::url($gambar) }}" alt="Gambar Postingan" data-full-image="{{ Storage::url($gambar) }}" class="post-image">
-                            @endforeach
-                        </div>
-                        @else
-                        <p>Tidak ada gambar.</p>
-                        @endif
-                        <p><strong>Lokasi:</strong> {{ $post->lokasi }}</p>
-                        <p><strong>Estimasi Anggaran:</strong> Rp {{ number_format($post->estimasi_anggaran, 2, ',', '.') }}</p>
-                        <p><strong>Durasi:</strong> {{ $post->durasi }}</p>
-                        <p><small>Dibuat pada: {{ $post->created_at->format('d F Y') }}</small></p>
+        <div class="profile-bio">
+            <h3 class="section-title"><i class="fas fa-quote-left"></i> Tentang Saya</h3>
+            <p>{{ $profile->bio ?? 'Belum ada bio.' }}</p>
+        </div>
 
-                        <!-- Like Section -->
-                        <div class="like-section">
-                            <p>Jumlah Like: {{ $post->likes->count() }}</p>
-                            <form action="{{ route('posts.like', $post->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-sm {{ $post->likes()->where('user_id', Auth::id())->exists() ? 'btn-outline-primary' : 'btn-primary' }}">
-                                    {{ $post->likes()->where('user_id', Auth::id())->exists() ? 'Unlike' : 'Like' }}
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Comments Section -->
-                        <div class="comments-section mt-3">
-                            <h3>Komentar</h3>
-                            @if ($post->comments->isEmpty())
-                                <p>Tidak ada komentar.</p>
-                            @else
-                                @foreach ($post->comments as $comment)
-                                    <div class="comment">
-                                        <p><strong>{{ $comment->user->name }}</strong>
-                                            @if ($comment->user->nama_panggilan)
-                                                ({{ $comment->user->nama_panggilan }})
-                                            @endif
-                                        </p>
-                                        <p>{{ $comment->content }}</p>
-                                        <small class="text-muted">Dibuat pada: {{ $comment->created_at->format('d F Y H:i') }}</small>
-                                    </div>
-                                @endforeach
-                            @endif
-                            <!-- Form Comment -->
-                            <form action="{{ route('posts.comment', $post->id) }}" method="POST" class="comment-form mt-3">
-                                @csrf
-                                <textarea name="content" placeholder="Tulis komentar..." required class="form-control"></textarea>
-                                <button type="submit" class="btn btn-primary mt-2">Kirim Komentar</button>
-                            </form>
-                        </div>
-
-                        <!-- Tombol Edit dan Hapus -->
-                        <div class="button-group">
-                            <a href="{{ route('posts.edit', $post->id) }}" class="btn btn-primary">Edit</a>
-                            <form action="{{ route('posts.destroy', $post->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus postingan ini?')">Hapus</button>
-                            </form>
-                        </div>
+        <div class="profile-sections">
+            <div class="profile-section">
+                <h3 class="section-title"><i class="fas fa-info-circle"></i> Informasi Pribadi</h3>
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Tempat Lahir</span>
+                        <span class="detail-value">{{ $profile->tempat_lahir ?? '-' }}</span>
                     </div>
-                @endforeach
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="fas fa-home"></i> Alamat</span>
+                        <span class="detail-value">{{ $profile->alamat_lengkap ?? '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="fas fa-phone"></i> Telepon</span>
+                        <span class="detail-value">{{ $profile->nomor_telepon ?? '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="fas fa-envelope"></i> Email</span>
+                        <span class="detail-value">{{ $profile->email }}</span>
+                    </div>
+                </div>
+            </div>
+
+            @if ($profile->media_sosial && count($profile->media_sosial) > 0)
+                <div class="profile-section">
+                    <h3 class="section-title"><i class="fas fa-share-alt"></i> Media Sosial</h3>
+                    <div class="social-media">
+                        @foreach ($profile->media_sosial as $media)
+                            <a href="#" class="social-item">{{ $media }}</a>
+                        @endforeach
+                    </div>
+                </div>
             @endif
-            <a href="{{ route('posts.create') }}" class="btn btn-secondary">Buat Postingan Baru</a>
+        </div>
+
+        <div class="profile-actions">
+            <a href="{{ route('profile.edit') }}" class="btn edit-btn"><i class="fas fa-edit"></i> Edit Profil</a>
+            <a href="{{ route('home') }}" class="btn back-btn"><i class="fas fa-arrow-left"></i> Kembali</a>
         </div>
     </div>
 
     <style>
-        /* General Styles */
-        .containers {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            flex: 1;
+        /* Base Styles */
+        .profile-container {
+            width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: #5A3E36;
+            background-color: #FDFAF6;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Notification */
+        .notification {
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
             display: flex;
-            gap: 50px;
+            align-items: center;
         }
 
-        /* Profile Section (Left Column) */
-        .profile-section {
-            width: 400px; /* Lebar tetap */
-            background-color: #fff;
-            padding: 20px; /* Padding lebih kecil */
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e0d8c9;
-            height: fit-content; /* Tinggi menyesuaikan isi */
+        .notification.info {
+            background-color: #CCE5FF;
+            color: #004085;
+            border-left: 4px solid #B8DAFF;
+        }
+
+        .notification.success {
+            background-color: #D4EDDA;
+            color: #155724;
+            border-left: 4px solid #C3E6CB;
+        }
+
+        .notification i {
+            margin-right: 0.5rem;
+        }
+
+        /* Profile Header */
+        .profile-header {
             display: flex;
-            flex-direction: column;
-            gap: 20px; /* Jarak antara dua bagian */
-            position: sticky;
-            top: 100px; /* Jarak dari atas, disesuaikan dengan tinggi header */
+            align-items: center;
+            margin-bottom: 2.5rem;
+            gap: 2rem;
         }
 
-        /* Bagian Informasi Profil */
-        .profile-info {
-            text-align: center;
-            border-bottom: 1px solid #e0d8c9; /* Garis pemisah */
-            padding-bottom: 20px; /* Jarak dari garis pemisah */
-        }
-
-        .profile-info img {
+        .profile-avatar {
+            position: relative;
             width: 120px;
             height: 120px;
-            object-fit: cover;
             border-radius: 50%;
-            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid #E0D8C9;
         }
 
-
-        .post-images {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .post-images img {
-            width: 150px;
-            height: 150px;
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border-radius: 5px;
-        }
-        .profile-info h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            color: #5a3e36;
-            margin-bottom: 10px;
         }
 
-        .profile-info p {
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        /* Bagian Detail Profil */
-        .profile-details {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px; /* Jarak antara detail */
-        }
-
-        .profile-details h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 18px;
-            color: #6b5848;
-            margin-bottom: 5px;
-        }
-
-        .profile-details p {
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        .profile-details ul {
-            padding-left: 20px;
-            margin: 0;
-        }
-
-        .profile-details ul li {
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 5px;
-        }
-
-        /* Button Group */
-        .button-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        /* Posts Section (Right Column) */
-        .posts-section {
-            flex: 2;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e0d8c9; /* Border natural vintage */
-        }
-
-        .posts-section h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 32px;
-            color: #5a3e36; /* Cokelat tua elegan */
+        .avatar-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(90, 62, 54, 0.7);
+            padding: 0.5rem;
             text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .post-card {
-            background-color: #fdfaf6; /* Latar krem */
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            transform: translateY(100%);
             transition: transform 0.3s ease;
         }
 
-        .post-card:hover {
-            transform: translateY(-5px);
+        .profile-avatar:hover .avatar-overlay {
+            transform: translateY(0);
         }
 
-        .post-card h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            color: #5a3e36;
-            margin-bottom: 10px;
+        .edit-avatar-btn {
+            color: white;
+            font-size: 0.7rem;
+            text-decoration: none;
         }
 
-        .post-card p {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 10px;
+        .profile-title h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem;
+            color: #5A3E36;
         }
 
-        .post-card img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 5px;
-            margin-bottom: 10px;
+        .profile-subtitle {
+            font-size: 1.1rem;
+            color: #8B4513;
+            margin: 0 0 1rem;
+            font-weight: 500;
         }
 
-        .like-section, .comments-section {
-            margin-top: 15px;
+        .profile-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+            color: #6B5848;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        /* Profile Bio */
+        .profile-bio {
+            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #CD853F;
+        }
+
+        .profile-bio p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #6B5848;
+            margin: 0.5rem 0 0;
+        }
+
+        /* Profile Sections */
+        .profile-sections {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .profile-section {
+            background-color: #FFFFFF;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: #8B4513;
+            margin: 0 0 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #E0D8C9;
+        }
+
+        /* Profile Details */
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #6B5848;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .detail-value {
+            font-size: 0.95rem;
+            color: #5A3E36;
+            font-weight: 500;
+            padding-left: 1.4rem;
+        }
+
+        /* Social Media */
+        .social-media {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .social-item {
+            background-color: #FDFAF6;
+            color: #5A3E36;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid #E0D8C9;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .social-item:hover {
+            background-color: #E0D8C9;
+            color: #5A3E36;
+        }
+
+        /* Profile Actions */
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 3rem;
         }
 
         .btn {
-            background-color: #a8c3b8; /* Hijau sage */
-            border: none;
-            color: #fff;
-            padding: 8px 15px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
+            padding: 0.75rem 1.75rem;
+            border-radius: 30px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
         }
 
-        .btn:hover {
-            background-color: #8ba89a; /* Hijau lebih gelap */
+        .edit-btn {
+            background-color: #8B4513;
+            color: white;
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
         }
 
-        .btn-primary {
-            background-color: #a8c3b8;
+        .edit-btn:hover {
+            background-color: #6B5848;
+            transform: translateY(-2px);
         }
 
-        .btn-primary:hover {
-            background-color: #8ba89a;
+        .back-btn {
+            background-color: #FDFAF6;
+            color: #8B4513;
+            border: 1px solid #E0D8C9;
         }
 
-        .btn-secondary {
-            background-color: #d4c8b5; /* Beige */
-            color: #5a3e36;
-        }
-
-        .btn-secondary:hover {
-            background-color: #c7b9a1;
-        }
-
-        .btn-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .btn-danger:hover {
-            background-color: #f5c6cb;
-        }
-
-        .comment-form textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d4c8b5;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .notification {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .notification.alert-info {
-            background-color: #cce5ff;
-            color: #004085;
-            border: 1px solid #b8daff;
-        }
-
-        .notification.alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .back-btn:hover {
+            background-color: #E0D8C9;
+            transform: translateY(-2px);
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .containers {
+            .profile-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .profile-header {
                 flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
             }
 
-            .profile-section, .posts-section {
-                width: 100%;
+            .profile-meta {
+                justify-content: center;
             }
 
-            .profile-section {
-                position: static; /* Hilangkan sticky di mobile */
+            .profile-details {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .btn {
+                justify-content: center;
             }
         }
     </style>

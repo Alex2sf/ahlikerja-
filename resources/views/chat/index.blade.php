@@ -5,6 +5,22 @@
 @section('content')
     <div class="container">
         <div class="chat-section">
+            <!-- Back Link -->
+            <div class="back-link-top">
+            <a href="{{ url()->previous() }}"
+            class="btn"
+            style="background-color: #CD853F;  /* coklat muda (peru) */
+                    color: white;
+                    font-weight: 600;
+                    padding: 6px 14px;
+                    font-size: 0.95rem;
+                    border: none;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+            Kembali
+            </a>
+            </div>
+
             <h1>Daftar Chat Saya</h1>
             @if (session('success'))
                 <div class="notification success">{{ session('success') }}</div>
@@ -86,7 +102,7 @@
                         <form action="{{ route('chats.store', $receiver->id) }}" method="POST" class="message-form" enctype="multipart/form-data">
                             @csrf
                             <div class="input-group">
-                                <textarea name="message" class="message-input" placeholder="Tulis pesan..." required></textarea>
+                                <textarea name="message" class="message-input" placeholder="Tulis pesan..." required>{{ request()->query('postTitle') ? "Halo, saya tertarik dengan postingan dengan judul \"".request()->query('postTitle')."\". Apakah kita bisa berdiskusi tentang surat perjanjian kontrak ini?" : '' }}</textarea>
                                 <div class="attachment-input">
                                     <label for="attachment" class="attachment-label">
                                         <i class="fas fa-paperclip"></i> Lampirkan File
@@ -103,10 +119,6 @@
                     @endif
                 </div>
             </div>
-
-            <div class="back-link">
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
-            </div>
         </div>
     </div>
 
@@ -120,6 +132,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
+            position: relative; /* Untuk positioning tombol */
         }
 
         .chat-section h1 {
@@ -128,6 +141,13 @@
             color: #5a3e36;
             text-align: center;
             margin-bottom: 30px;
+        }
+
+        /* Back Link di Pojok Kiri Atas */
+        .back-link-top {
+            position: absolute;
+            top: 15px;
+            left: 15px;
         }
 
         /* Chat Container */
@@ -368,30 +388,27 @@
             border: 1px solid #f5c6cb;
         }
 
-        /* Back Link */
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
         /* Button Styles */
-        .btn {
-            background-color: #a8c3b8; /* Hijau sage */
+       .btn {
+            background-color: #2E8B57; /* SeaGreen, hijau zamrud yang tegas */
             border: none;
-            color: #fff;
-            padding: 8px 15px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            text-decoration: none;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 6px rgba(46, 139, 87, 0.5);
             display: inline-block;
+            text-decoration: none;
         }
 
         .btn:hover {
-            background-color: #8ba89a; /* Hijau lebih gelap */
+            background-color: #276749; /* Lebih gelap saat hover */
+            box-shadow: 0 4px 12px rgba(39, 103, 73, 0.7);
         }
+
 
         .btn-secondary {
             background-color: #d4c8b5; /* Beige */
@@ -461,8 +478,13 @@
             }
 
             .btn {
-                width: 100%;
-                text-align: center;
+                width: auto; /* Tombol tidak perlu full width di layar kecil */
+                padding: 6px 12px;
+            }
+
+            .back-link-top {
+                top: 10px;
+                left: 10px;
             }
         }
     </style>

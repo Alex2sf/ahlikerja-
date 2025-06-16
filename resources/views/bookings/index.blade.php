@@ -5,7 +5,26 @@
 @section('content')
     <div class="container">
         <div class="bookings-section">
-            <h1>Pesanan Saya</h1>
+            <!-- Back Link -->
+            <div class="back-link-top">
+                <a href="{{ url()->previous() }}"
+                class="btn"
+                style="background-color: #CD853F; /* coklat muda (peru) */
+                        color: white;
+                        font-weight: 600;
+                        padding: 6px 14px;
+                        font-size: 0.95rem;
+                        border: none;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+                        text-decoration: none;
+                        display: inline-block;
+                        cursor: pointer;">
+                    Kembali
+                </a>
+            </div>
+
+            <h1>List Booking Kontraktor</h1>
             @if (session('success'))
                 <div class="notification success">{{ session('success') }}</div>
             @endif
@@ -72,7 +91,11 @@
                             @if ($booking->status === 'accepted' && !$booking->final_approve)
                                 <form action="{{ route('bookings.finalApprove', $booking->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Apakah Anda yakin ingin menyetujui pesanan ini secara final?')">Final Approve</button>
+                                    <button type="submit"
+                                        style="background-color: #2C3E50; color: white; font-weight: 600; padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 3px 8px rgba(192, 57, 43, 0.6); transition: background-color 0.3s ease, box-shadow 0.3s ease;"
+                                        onclick="return confirm('Apakah Anda yakin ingin menyetujui pesanan ini secara final?')">
+                                    Final Approve
+                                    </button>
                                 </form>
                             @endif
                             <p><small>Dibuat pada: {{ $booking->created_at->format('d F Y') }}</small></p>
@@ -80,10 +103,6 @@
                     @endforeach
                 </div>
             @endif
-
-            <div class="back-link">
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
-            </div>
         </div>
     </div>
 
@@ -97,6 +116,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
+            position: relative; /* Untuk positioning tombol */
         }
 
         .bookings-section h1 {
@@ -105,6 +125,13 @@
             color: #5a3e36;
             text-align: center;
             margin-bottom: 20px; /* Kurangi dari 25px */
+        }
+
+        /* Back Link di Pojok Kiri Atas */
+        .back-link-top {
+            position: absolute;
+            top: 15px;
+            left: 15px;
         }
 
         /* Bookings List */
@@ -260,12 +287,6 @@
             border: 1px solid #f5c6cb;
         }
 
-        /* Back Link */
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
         /* Button Styles */
         .btn {
             background-color: #a8c3b8;
@@ -350,8 +371,7 @@
             }
 
             .btn {
-                width: 100%;
-                text-align: center;
+                width: auto; /* Tombol tidak perlu full width di layar kecil */
                 padding: 5px 10px;
                 font-size: 12px;
             }
@@ -359,6 +379,11 @@
             .decline-reason {
                 font-size: 13px;
                 padding: 6px;
+            }
+
+            .back-link-top {
+                top: 10px;
+                left: 10px;
             }
         }
     </style>

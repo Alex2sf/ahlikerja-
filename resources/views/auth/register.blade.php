@@ -171,6 +171,13 @@
             margin: 5px 0;
         }
 
+        .field-error {
+            color: #721c24;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
         /* Link to Login */
         .login-link {
             text-align: center;
@@ -249,6 +256,7 @@
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
+                    <div id="password-error" class="field-error">Password harus minimal 8 karakter.</div>
                 </div>
                 <div class="form-group">
                     <label for="password_confirmation">Konfirmasi Password</label>
@@ -275,10 +283,33 @@
         document.getElementById('registerForm').addEventListener('submit', function (e) {
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('password_confirmation').value;
+            const passwordError = document.getElementById('password-error');
 
+            // Validasi panjang password
+            if (password.length < 8) {
+                e.preventDefault();
+                passwordError.style.display = 'block';
+                alert('Password harus minimal 8 karakter!');
+                return;
+            }
+
+            // Validasi kecocokan password
             if (password !== confirmPassword) {
                 e.preventDefault();
                 alert('Password dan Konfirmasi Password tidak cocok!');
+                return;
+            }
+        });
+
+        // Validasi real-time untuk panjang password
+        document.getElementById('password').addEventListener('input', function () {
+            const password = this.value;
+            const passwordError = document.getElementById('password-error');
+
+            if (password.length < 8) {
+                passwordError.style.display = 'block';
+            } else {
+                passwordError.style.display = 'none';
             }
         });
 

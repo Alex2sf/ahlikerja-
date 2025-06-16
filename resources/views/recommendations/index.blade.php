@@ -16,7 +16,7 @@
                             <div class="contractor-header">
                                 @if ($contractor->contractorProfile && $contractor->contractorProfile->foto_profile)
                                     <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}">
-                                        <img src="{{ Storage::url('contractors/' . $contractor->contractorProfile->foto_profile) }}" alt="Foto Profil" class="profile-photo">
+                                        <img src="{{ Storage::url($contractor->contractorProfile->foto_profile) }}" alt="Foto Profile" class="item-image">
                                     </a>
                                 @else
                                     <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}">
@@ -38,9 +38,19 @@
                                 @endif
                             </p>
                             <div class="button-group">
-                                <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}" class="btn btn-primary">Lihat Profil</a>
-                                <a href="{{ route('bookings.create', $contractor->id) }}" class="btn btn-success">Pesan</a>
-                                <a href="{{ route('chats.index', $contractor->id) }}" class="btn btn-secondary">Chat</a>
+                                {{-- <a href="{{ route('contractor.profile.showPublic', $contractor->id) }}" class="btn btn-primary">Lihat Profil</a> --}}
+                            <a href="{{ route('bookings.create', $contractor->id) }}"
+                            class="btn"
+                            style="background-color: #3498db; color: white; font-weight: 600; padding: 8px 16px; border-radius: 5px; text-decoration: none;">
+                            Pesan
+                            </a>
+
+                            <a href="{{ route('chats.index', $contractor->id) }}"
+                            class="btn"
+                            style="background-color: #7f8c8d; color: white; font-weight: 600; padding: 8px 16px; border-radius: 5px; text-decoration: none;">
+                            Chat
+                            </a>
+
                             </div>
                         </div>
                     @endforeach
@@ -97,7 +107,8 @@
             margin-bottom: 15px;
         }
 
-        .profile-photo {
+        .profile-photo,
+        .item-image {
             width: 100px;
             height: 100px;
             object-fit: cover;

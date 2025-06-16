@@ -6,7 +6,7 @@
     <div class="containers">
         <!-- Header Section -->
         <div class="booking-header" style="background-color: #a8c3b8; padding: 20px; border-radius: 10px 10px 0 0;">
-            <h1 class="text-center text-white">Pesanan untuk Saya (Kontraktor)</h1>
+            <h1 class="text-center text-white">Booking</h1>
         </div>
 
         <!-- Notifikasi -->
@@ -15,6 +15,110 @@
                 {{ session('success') }}
             </div>
         @endif
+
+        <!-- Toggle Button for Guidelines -->
+        <div class="toggle-buttons">
+            <button class="btn btn-secondary toggle-btn" onclick="toggleGuidelines()"
+                style="background-color: #8B4513; /* coklat tua */
+                    color: white;
+                    font-weight: 700;
+                    padding: 10px 20px;
+                    font-size: 1.1rem;
+                    border-radius: 6px;
+                    border: none;
+                    cursor: pointer;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            Cara Kerja Booking
+            </button>
+        </div>
+
+        <!-- Guidelines Section -->
+        <div class="guidelines-section" id="guidelines-section" style="display: none;">
+            <h2>Cara Kerja Booking</h2>
+            <div class="guidelines-grid">
+                <div class="guidelines-left">
+                    <div class="guidelines-content">
+                        <p>Client memastikan proyek dapat diproses dengan cepat dan profesional, berikut langkah-langkah berikut:</p>
+                        <ul>
+                            <li>
+                                <strong>1. Client Mengisi Deskripsi dan Formulir dengan Lengkap dan Jelas</strong>
+                                <p>Lengkapi seluruh informasi yang diminta, seperti:</p>
+                                <ul>
+                                    <li>Judul proyek dan deskripsi singkat</li>
+                                    <li>Lokasi tanah dan luas bangunan</li>
+                                    <li>Kebutuhan ruang (jumlah kamar, dapur, dll.)</li>
+                                    <li>Preferensi material dan anggaran</li>
+                                    <li>Target waktu pelaksanaan (contoh: 3 hari, 1 minggu, 2 bulan)</li>
+                                </ul>
+                                <p><em>Tips: Semakin detail informasi yang Client berikan, semakin mudah bagi kontraktor memahami kebutuhan Client.</em></p>
+                            </li>
+                            <li>
+                                <strong>2. Client Mengunggah Gambar Pendukung (Wajib)</strong>
+                                <p>Unggah minimal satu file seperti:</p>
+                                <ul>
+                                    <li>Denah kasar atau sketsa tangan</li>
+                                    <li>Gambar inspirasi dari internet</li>
+                                    <li>Foto lokasi tanah</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>3. Client Membuat dan Unggah Surat Perjanjian Kerja (SPK) (Wajib)</strong>
+                                <p>Client harus menyusun dan mengunggah Surat Perjanjian Kerja berisi:</p>
+                                <ul>
+                                    <li>Rincian pekerjaan</li>
+                                    <li>Estimasi anggaran</li>
+                                    <li>Jadwal pelaksanaan (contoh: 3 hari, 1 minggu, 2 bulan)</li>
+                                    <li>Ketentuan pembayaran</li>
+                                </ul>
+                                <p><em>Catatan: Template SPK tersedia untuk diunduh jika diperlukan.</em></p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="guidelines-right">
+                    <div class="guidelines-content">
+                        <ul>
+                            <li>
+                                <strong>4. Client Mengirim Semua Dokumen ke Kontraktor</strong>
+                                <p>Setelah semua siap (formulir, gambar, SPK), silakan kirim ke kontraktor pilihan Client melalui platform kami atau kontak langsung.</p>
+                            </li>
+                            <li>
+                                <strong>5. Client Menunggu Respons dari Kontraktor</strong>
+                                <p>Kontraktor akan memeriksa dokumen dan memberikan keputusan:</p>
+                                <ul>
+                                    <li>Menerima proyek: proses pembangunan bisa segera dijadwalkan.</li>
+                                    <li>Menolak proyek: Client akan diberi alasan dan bisa memilih kontraktor lain.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>6. Kontraktor Merespons dan Mengirim File Final Setelah Diskusi di Chat</strong>
+                                <p>Dokumen atau gambar akhir disesuaikan berdasarkan hasil diskusi dengan klien.</p>
+                            </li>
+                            <li>
+                                <strong>7. Client yang Memesan Akan Memberikan Final Approve Terjadinya Kesepakatan</strong>
+                                <p>Setelah semua disepakati, proyek bisa dimulai sesuai jadwal yang ditentukan.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="back-link">
+        <a href="{{ route('home') }}"
+        class="btn"
+        style="background-color: #D2B48C;  /* tan - coklat muda */
+                color: #3e2723;              /* coklat tua untuk teks */
+                font-weight: 600;
+                padding: 6px 14px;
+                font-size: 0.95rem;
+                border: none;
+                border-radius: 5px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+        Kembali ke Home
+        </a>
+        </div>
 
         <!-- Booking Content -->
         <div class="booking-content">
@@ -37,12 +141,24 @@
                                 </div>
                             @endif
                             @if ($booking->dokumen)
-                                <p class="booking-detail"><strong>Dokumen:</strong> <a href="{{ Storage::url($booking->dokumen) }}" target="_blank">Lihat Dokumen</a></p>
+                            <p class="booking-detail">
+                            <strong>Dokumen:</strong>
+                            <a href="{{ Storage::url($booking->dokumen) }}" target="_blank"
+                                style="color: #8B4513; font-weight: 700; text-decoration: underline; background-color: #FAF0E6; padding: 4px 8px; border-radius: 4px;">
+                                Lihat Dokumen
+                            </a>
+                            </p>
                             @else
                                 <p class="booking-detail text-muted">Tidak ada dokumen.</p>
                             @endif
                             @if ($booking->response_file)
-                                <p class="booking-detail"><strong>File Balasan:</strong> <a href="{{ Storage::url($booking->response_file) }}" target="_blank">Lihat File Balasan</a></p>
+                            <p class="booking-detail">
+                            <strong>File Balasan:</strong>
+                            <a href="{{ Storage::url($booking->response_file) }}" target="_blank"
+                                style="color: #d2691e; font-weight: 700; text-decoration: underline; background-color: #fff3e0; padding: 4px 8px; border-radius: 4px; transition: all 0.3s ease;">
+                                Lihat File Balasan
+                            </a>
+                            </p>
                             @else
                                 <p class="booking-detail text-muted">Tidak ada file balasan.</p>
                             @endif
@@ -108,17 +224,41 @@
                             @if ($booking->status === 'declined' && $booking->decline_reason)
                                 <p class="decline-reason"><strong>Alasan Penolakan:</strong> {{ $booking->decline_reason }}</p>
                             @endif
+
+                            <!-- Tampilkan Bukti Pembayaran untuk Setiap Tahap -->
+                            @if ($booking->payment_stage > 0 || ($booking->is_completed && $booking->review))
+                                <div class="payment-details">
+                                    @if ($booking->is_completed && $booking->review && $booking->review->pembayaran)
+                                        <div class="payment-stage">
+                                            <p class="booking-detail"><strong>Bukti Pembayaran (Review):</strong></p>
+                                            <img src="{{ Storage::url($booking->review->pembayaran) }}" alt="Bukti Pembayaran (Review)" class="payment-image">
+                                        </div>
+                                    @endif
+                                    @for ($i = 1; $i <= $booking->payment_stage; $i++)
+                                        @if ($booking->{"payment_proof_$i"})
+                                            <div class="payment-stage">
+                                                <p class="booking-detail"><strong>Bukti Pembayaran Tahap {{ $i }}:</strong></p>
+                                                <img src="{{ Storage::url($booking->{"payment_proof_$i"}) }}" alt="Bukti Pembayaran Tahap {{ $i }}" class="payment-image">
+                                            </div>
+                                        @endif
+                                    @endfor
+                                </div>
+                            @endif
+
+                            <!-- Tampilkan Ulasan jika ada -->
+                            @if ($booking->is_completed && $booking->review)
+                                <div class="review-details">
+                                    <p class="booking-detail"><strong>Rating:</strong> {{ $booking->review->rating }}/5</p>
+                                    <p class="booking-detail"><strong>Ulasan:</strong> {{ $booking->review->review ?? 'Tidak ada ulasan' }}</p>
+                                </div>
+                            @endif
+
                             <p class="booking-detail"><strong>Dibuat pada:</strong> {{ $booking->created_at->format('d F Y') }}</p>
                             <div class="decoration-line"></div>
                         </div>
                     @endforeach
                 </div>
             @endif
-        </div>
-
-        <!-- Back Link -->
-        <div class="back-link">
-            <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
         </div>
     </div>
 
@@ -155,6 +295,105 @@
             background-color: #d4edda;
             color: #155724;
             border-color: #c3e6cb;
+        }
+
+        /* Toggle Buttons */
+        .toggle-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Guidelines Section */
+        .guidelines-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e0d8c9;
+            transition: all 0.3s ease;
+        }
+
+        .guidelines-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: #5a3e36;
+            margin-bottom: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .guidelines-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .guidelines-left,
+        .guidelines-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .guidelines-content p {
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .guidelines-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .guidelines-content ul li {
+            margin-bottom: 20px;
+        }
+
+        .guidelines-content ul li strong {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: #6b5848;
+        }
+
+        .guidelines-content ul li ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .guidelines-content ul li ul li {
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .guidelines-content em {
+            font-style: italic;
+            color: #6b5848;
+            font-size: 13px;
+        }
+
+        /* Back Link */
+        .back-link {
+            text-align: left;
+            margin-bottom: 20px;
         }
 
         /* Booking Content */
@@ -323,12 +562,12 @@
 
         .status.final-approve.approved {
             color: #fff;
-            background-color: #17a2b8; /* Warna biru untuk approved */
+            background-color: #17a2b8;
         }
 
         .status.final-approve.pending {
             color: #fff;
-            background-color: #6c757d; /* Warna abu-abu untuk pending */
+            background-color: #6c757d;
         }
 
         /* Decline Reason */
@@ -410,18 +649,33 @@
             margin-top: 5px;
         }
 
+        /* Payment Details */
+        .payment-details {
+            margin-top: 10px;
+        }
+
+        .payment-stage {
+            margin-bottom: 15px;
+        }
+
+        .payment-image {
+            max-width: 150px;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        /* Review Details */
+        .review-details {
+            margin-top: 10px;
+        }
+
         /* Decoration Line */
         .decoration-line {
             height: 1px;
             background-color: #d4c8b5;
             margin-top: 15px;
             opacity: 0.7;
-        }
-
-        /* Back Link */
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
         }
 
         /* Button Styles */
@@ -482,6 +736,10 @@
                 font-size: 28px;
             }
 
+            .guidelines-grid {
+                grid-template-columns: 1fr;
+            }
+
             .booking-grid {
                 grid-template-columns: 1fr;
             }
@@ -530,6 +788,10 @@
                 font-size: 13px;
             }
 
+            .payment-image {
+                max-width: 100px;
+            }
+
             .btn {
                 padding: 6px 12px;
                 font-size: 11px;
@@ -538,10 +800,28 @@
             .status-action textarea {
                 height: 60px;
             }
+
+            .toggle-buttons {
+                flex-direction: column;
+            }
+
+            .toggle-btn {
+                width: 100%;
+            }
         }
     </style>
 
     <script>
+        // Toggle Guidelines Section
+        function toggleGuidelines() {
+            const guidelinesSection = document.getElementById('guidelines-section');
+            if (guidelinesSection.style.display === 'none' || guidelinesSection.style.display === '') {
+                guidelinesSection.style.display = 'block';
+            } else {
+                guidelinesSection.style.display = 'none';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             // Logika untuk form status
             document.querySelectorAll('.status-select').forEach(function (select) {
@@ -672,3 +952,4 @@
         });
     </script>
 @endsection
+

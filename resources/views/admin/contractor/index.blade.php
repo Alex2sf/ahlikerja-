@@ -14,6 +14,72 @@
             </div>
         @endif
 
+        <!-- Tombol Toggle Panduan -->
+        <div class="toggle-guide">
+            <button id="toggleGuideBtn"
+                class="btn"
+                style="background-color: #CD853F; /* Coklat muda */
+                    color: white;
+                    font-weight: 600;
+                    padding: 8px 14px;
+                    font-size: 0.95rem;
+                    border: none;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                Tampilkan Panduan
+            </button>
+        </div>
+
+<!-- Panduan Dokumen -->
+<div class="guide-section" id="guideSection" style="display: none;">
+    <h2>Panduan Persyaratan untuk Kontraktor</h2>
+    <p>Untuk mendapatkan persetujuan sebagai kontraktor, Anda wajib melengkapi data profil dan mengunggah dokumen yang diperlukan. Pastikan semua informasi yang diberikan akurat dan sesuai dengan ketentuan berikut:</p>
+
+    <div class="guide-subsection">
+        <h3>1. Data Profil Wajib</h3>
+        <p>Informasi berikut harus diisi pada profil Anda untuk memenuhi syarat pendaftaran:</p>
+        <ul>
+            <li><strong>Foto Profil:</strong> Unggah foto profil profesional yang jelas, menampilkan wajah atau logo perusahaan.</li>
+            <li><strong>Nama Perusahaan:</strong> Cantumkan nama resmi perusahaan Anda sesuai dokumen legalitas.</li>
+            <li><strong>Nomor Telepon:</strong> Masukkan nomor telepon aktif yang dapat dihubungi untuk komunikasi.</li>
+            <li><strong>Alamat:</strong> Berikan alamat lengkap perusahaan, termasuk kota dan kode pos.</li>
+            <li><strong>Bio:</strong> Tulis deskripsi singkat (bio) tentang perusahaan, mencakup visi, misi, atau keunggulan layanan (maksimal 500 karakter).</li>
+            <li><strong>Nomor NPWP:</strong> Masukkan Nomor Pokok Wajib Pajak perusahaan yang valid.</li>
+            <li><strong>Bidang Usaha:</strong> Pilih minimal 1 dan maksimal 10 bidang usaha yang sesuai dengan keahlian perusahaan (contoh: konstruksi bangunan, renovasi interior, instalasi listrik).</li>
+        </ul>
+        <p><strong>Catatan:</strong> Pastikan semua data diisi dengan benar. Data yang tidak lengkap akan memperlambat proses persetujuan.</p>
+    </div>
+
+    <div class="guide-subsection">
+        <h3>2. Dokumen Teknis dan Administratif</h3>
+        <p>Dokumen berikut diperlukan untuk membuktikan kapabilitas teknis dan administratif perusahaan Anda:</p>
+        <ul>
+            <li><strong>Daftar Personel Inti:</strong> Lampirkan daftar tenaga kerja utama (misalnya mandor, teknisi, atau tukang ahli) beserta sertifikat kompetensi (SKA/SKT) jika ada untuk meningkatkan kredibilitas.</li>
+            <li><strong>Inventaris Peralatan:</strong> Sertakan daftar peralatan kerja (contoh: scaffolding, concrete mixer, alat ukur) yang dimiliki atau disewa, disertai bukti kepemilikan atau kontrak sewa.</li>
+            <li><strong>Riwayat Proyek:</strong> Cantumkan pengalaman proyek sebelumnya, termasuk nama proyek, lokasi, tahun pengerjaan, nilai kontrak, dan kontak pemberi kerja untuk verifikasi.</li>
+            <li><strong>Dokumentasi Proyek:</strong> Unggah foto tahapan proyek (pra-konstruksi, proses, dan hasil akhir). Testimoni klien dapat dilampirkan sebagai nilai tambah.</li>
+            <li><strong>Formulir Penawaran:</strong> Siapkan dokumen penawaran teknis dan harga (metodologi, jadwal, tenaga kerja, alat) sesuai kebutuhan tender proyek.</li>
+            <li><strong>Surat Pernyataan Kebenaran:</strong> Lampirkan surat resmi yang menyatakan bahwa semua dokumen yang diajukan sah, ditandatangani oleh pimpin perusahaan dengan stempel resmi.</li>
+        </ul>
+        <p><strong>Catatan:</strong> Portofolio proyek minimal berisi 3 proyek yang telah diselesaikan untuk menunjukkan pengalaman yang memadai.</p>
+    </div>
+
+    <div class="guide-subsection">
+        <h3>3. Dokumen Legalitas dan Perizinan</h3>
+        <p>Untuk memastikan perusahaan Anda beroperasi secara legal, unggah dokumen legalitas berikut:</p>
+        <ul>
+            <li><strong>Akta Pendirian Perusahaan:</strong> Dokumen resmi dari notaris yang memuat informasi pendirian perusahaan, seperti nama, tujuan usaha, dan struktur kepemilikan.</li>
+            <li><strong>SK Kemenkumham:</strong> Surat pengesahan dari Kementerian Hukum dan HAM atas Akta Pendirian.</li>
+            <li><strong>NIB (Nomor Induk Berusaha):</strong> Nomor identitas resmi perusahaan yang diterbitkan melalui sistem OSS, mencakup izin usaha.</li>
+            <li><strong>NPWP Perusahaan:</strong> Nomor Pokok Wajib Pajak badan perusahaan yang menunjukkan pendaftaran pajak aktif.</li>
+            <li><strong>SKT Pajak:</strong> Surat Keterangan Terdaftar Pajak yang membuktikan status aktif di kantor pajak.</li>
+            <li><strong>SBU Konstruksi:</strong> Sertifikat Badan Usaha untuk jasa konstruksi, menunjukkan klasifikasi dan kualifikasi perusahaan.</li>
+            <li><strong>IUJK:</strong> Izin Usaha Jasa Konstruksi dari pemerintah daerah sebagai bukti legalitas operasional.</li>
+            <li><strong>TDP (Opsional):</strong> Jika belum memiliki NIB, lampirkan Tanda Daftar Perusahaan (kini digantikan oleh NIB).</li>
+        </ul>
+        <p><strong>Catatan:</strong> Pastikan semua dokumen legalitas masih berlaku dan sesuai dengan data profil perusahaan.</p>
+    </div>
+</div>
         <!-- Daftar Kontraktor -->
         @if ($contractors->isEmpty())
             <p class="text-muted text-center">Tidak ada kontraktor yang menunggu persetujuan.</p>
@@ -112,22 +178,36 @@
                             @endif
 
                             <!-- Form Keputusan -->
-                            <form action="{{ route('admin.contractors.approve', $contractor->id) }}" method="POST" class="decision-form">
-                                @csrf
-                                <div class="decision-options">
-                                    <label>
-                                        <input type="radio" name="approved" value="1" required> Setujui
-                                    </label>
-                                    <label>
-                                        <input type="radio" name="approved" value="0"> Tolak
-                                    </label>
-                                </div>
-                                <div class="form-group">
-                                    <label>Catatan (opsional):</label>
-                                    <textarea name="admin_note" placeholder="Tulis catatan untuk kontraktor..." class="form-control"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Simpan Keputusan</button>
-                            </form>
+                            <form action="{{ route('admin.contractors.approve', $contractor->id) }}" method="POST" class="decision-form" style="background-color: #f9f5f1; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                            @csrf
+                            <div class="decision-options" style="margin-bottom: 15px; font-weight: 600;">
+                                <label style="margin-right: 20px; color: #333;">
+                                    <input type="radio" name="approved" value="1" required> ✅ Setujui
+                                </label>
+                                <label style="color: #333;">
+                                    <input type="radio" name="approved" value="0"> ❌ Tolak
+                                </label>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="font-weight: 600; color: #333;">Catatan (opsional):</label>
+                                <textarea name="admin_note" placeholder="Tulis catatan untuk kontraktor..." class="form-control"
+                                    style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.95rem;"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn" style="
+                                background-color: #CD853F; /* Coklat muda */
+                                color: white;
+                                font-weight: 600;
+                                padding: 10px 18px;
+                                font-size: 1rem;
+                                border: none;
+                                border-radius: 5px;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                                Simpan Keputusan
+                            </button>
+                        </form>
+
                         </div>
                         <hr class="divider">
                     </div>
@@ -140,6 +220,20 @@
             <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
         </div>
     </div>
+
+    <script>
+        // Toggle guide section visibility
+        document.getElementById('toggleGuideBtn').addEventListener('click', function () {
+            const guideSection = document.getElementById('guideSection');
+            if (guideSection.style.display === 'none') {
+                guideSection.style.display = 'block';
+                this.textContent = 'Sembunyikan Panduan';
+            } else {
+                guideSection.style.display = 'none';
+                this.textContent = 'Tampilkan Panduan';
+            }
+        });
+    </script>
 
     <style>
         /* General Container */
@@ -165,6 +259,13 @@
             margin-bottom: 10px; /* Kurangi margin */
         }
 
+        h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: #5a3e36;
+            margin-bottom: 8px;
+        }
+
         p, label, li {
             font-family: 'Roboto', sans-serif;
             font-size: 14px; /* Kurangi ukuran */
@@ -185,6 +286,28 @@
             color: #155724;
             border: 1px solid #c3e6cb;
             font-size: 14px; /* Sesuaikan ukuran teks */
+        }
+
+        /* Toggle Button */
+        .toggle-guide {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .btn-toggle {
+            background-color: #a8c3b8;
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-toggle:hover {
+            background-color: #8ba89a;
         }
 
         /* Contractors List */
@@ -303,6 +426,27 @@
         .form-control:focus {
             border-color: #a8c3b8;
             outline: none;
+        }
+
+        /* Guide Section */
+        .guide-section {
+            margin-top: 15px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            border: 1px solid #e0d8c9;
+        }
+
+        .guide-subsection {
+            margin-bottom: 20px;
+        }
+
+        .guide-subsection ul {
+            padding-left: 20px;
+        }
+
+        .guide-subsection li {
+            margin-bottom: 8px;
         }
 
         /* Button Styles */

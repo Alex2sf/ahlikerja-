@@ -9,6 +9,7 @@ use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\PostDeletedByAdminNotification;
 
 class PostController extends Controller
 {
@@ -31,14 +32,59 @@ class PostController extends Controller
         return view('posts.create');
     }
 
-    public function index()
-    {
-        $posts = Post::where('user_id', Auth::id())
-                     ->with('likes', 'comments')
-                     ->orderBy('created_at', 'desc')
-                     ->get();
-        return view('posts.index', compact('posts'));
+
+    public function getLatestTenders()
+{
+    $latestTenders = Post::with('user')
+                        ->orderBy('created_at', 'desc')
+                        ->take(5)
+                        ->get();
+    return view('home', compact('latestTenders'));
+}
+
+public function index(Request $request)
+{
+    $user = Auth::user();
+    $query = Post::where('user_id', $user->id)
+                 ->with('likes', 'comments')
+                 ->orderBy('created_at', 'desc');
+
+    // Filter berdasarkan judul
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where(function ($q) use ($search) {
+            $q->where('judul', 'like', "%{$search}%")
+              ->orWhere('deskripsi', 'like', "%{$search}%");
+        });
     }
+
+    // Filter berdasarkan lokasi
+    if ($request->filled('lokasi')) {
+        $query->where('lokasi', 'like', "%{$request->input('lokasi')}%");
+    }
+
+    // Filter berdasarkan estimasi anggaran
+    if ($request->filled('anggaran_min')) {
+        $query->where('estimasi_anggaran', '>=', $request->input('anggaran_min'));
+    }
+    if ($request->filled('anggaran_max')) {
+        $query->where('estimasi_anggaran', '<=', $request->input('anggaran_max'));
+    }
+
+    // Filter berdasarkan durasi
+    if ($request->filled('durasi')) {
+        $query->where('durasi', 'like', "%{$request->input('durasi')}%");
+    }
+
+    // Filter berdasarkan status
+    if ($request->filled('status')) {
+        $query->where('status', $request->input('status'));
+    }
+
+    $posts = $query->get();
+
+    return view('posts.index', compact('posts'));
+}
 
     public function all(Request $request)
     {
@@ -100,11 +146,25 @@ class PostController extends Controller
         $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
-            'gambar.*' => 'nullable|image|max:2048',
+            'gambar.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'dokumen' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'lokasi' => 'required|string|max:255',
-            'estimasi_anggaran' => 'required|numeric',
-            'durasi' => 'required|string|max:255',
+            'estimasi_anggaran' => 'required|numeric|min:10000', // Minimal 5 digit (Rp 10,000)
+            'durasi' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    // Cek apakah mengandung salah satu satuan durasi
+                    if (!preg_match('/\b\d+\s*(hari|minggu|bulan)\b/i', $value)) {
+                        $fail('Durasi harus menyertakan satuan "hari", "minggu", atau "bulan" (contoh: 3 hari, 1 minggu, 2 bulan).');
+                    }
+                },
+            ],
+        ], [
+            'estimasi_anggaran.min' => 'Estimasi anggaran minimal Rp 10,000.',
+            'gambar.*.mimes' => 'Gambar hanya boleh berformat JPEG, PNG, atau JPG.',
+            'durasi.regex' => 'Durasi harus menyertakan satuan "hari", "minggu", atau "bulan" (contoh: 3 hari, 1 minggu, 2 bulan).',
         ]);
 
         $gambarPaths = [];
@@ -140,12 +200,13 @@ class PostController extends Controller
 
     public function edit($id)
     {
-        if (!ProfileController::isProfileComplete(Auth::user())) {
-            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
-        }
-
         $user = Auth::user();
         $post = Post::with('likes', 'comments')->findOrFail($id);
+
+        // Hanya user (bukan admin) yang perlu profil lengkap untuk edit
+        if ($user->role !== 'admin' && !ProfileController::isProfileComplete($user)) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
 
         if ($user->role !== 'admin' && $user->id !== $post->user_id) {
             return redirect()->route('posts.all')->with('error', 'Anda tidak memiliki izin untuk mengedit postingan ini.');
@@ -156,12 +217,13 @@ class PostController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!ProfileController::isProfileComplete(Auth::user())) {
-            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
-        }
-
         $user = Auth::user();
         $post = Post::findOrFail($id);
+
+        // Hanya user (bukan admin) yang perlu profil lengkap untuk update
+        if ($user->role !== 'admin' && !ProfileController::isProfileComplete($user)) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
 
         if ($user->role !== 'admin' && $user->id !== $post->user_id) {
             return redirect()->route('posts.all')->with('error', 'Anda tidak memiliki izin untuk mengupdate postingan ini.');
@@ -171,11 +233,25 @@ class PostController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
             'gambar' => 'nullable|array',
-            'gambar.*' => 'image|max:2048',
+            'gambar.*' => 'image|mimes:jpeg,png,jpg|max:2048',
             'dokumen' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'lokasi' => 'required|string|max:255',
-            'estimasi_anggaran' => 'required|numeric',
-            'durasi' => 'required|string|max:100',
+            'estimasi_anggaran' => 'required|numeric|min:10000', // Minimal 5 digit (Rp 10,000)
+            'durasi' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    // Cek apakah mengandung salah satu satuan durasi
+                    if (!preg_match('/\b\d+\s*(hari|minggu|bulan)\b/i', $value)) {
+                        $fail('Durasi harus menyertakan satuan "hari", "minggu", atau "bulan" (contoh: 3 hari, 1 minggu, 2 bulan).');
+                    }
+                },
+            ],
+        ], [
+            'estimasi_anggaran.min' => 'Estimasi anggaran minimal Rp 10,000.',
+            'gambar.*.mimes' => 'Gambar hanya boleh berformat JPEG, PNG, atau JPG.',
+            'durasi.regex' => 'Durasi harus menyertakan satuan "hari", "minggu", atau "bulan" (contoh: 3 hari, 1 minggu, 2 bulan).',
         ]);
 
         $data = $request->only(['judul', 'deskripsi', 'lokasi', 'estimasi_anggaran', 'durasi']);
@@ -214,15 +290,21 @@ class PostController extends Controller
 
     public function destroy($id)
     {
-        if (!ProfileController::isProfileComplete(Auth::user())) {
-            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
-        }
-
         $user = Auth::user();
         $post = Post::findOrFail($id);
 
+        // Hanya user (bukan admin) yang perlu profil lengkap untuk hapus
+        if ($user->role !== 'admin' && !ProfileController::isProfileComplete($user)) {
+            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        }
+
         if ($user->role !== 'admin' && $user->id !== $post->user_id) {
             return redirect()->route('posts.all')->with('error', 'Anda tidak memiliki izin untuk menghapus postingan ini.');
+        }
+
+        // Kirim notifikasi ke user jika dihapus oleh admin
+        if ($user->role === 'admin' && $user->id !== $post->user_id) {
+            $post->user->notify(new PostDeletedByAdminNotification($post));
         }
 
         if ($post->gambar && is_array($post->gambar) && count($post->gambar) > 0) {
@@ -242,9 +324,9 @@ class PostController extends Controller
 
     public function like($id)
     {
-        if (!ProfileController::isProfileComplete(Auth::user())) {
-            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
-        }
+        // if (!ProfileController::isProfileComplete(Auth::user())) {
+        //     return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        // }
 
         $post = Post::findOrFail($id);
         $user = Auth::user();
@@ -271,9 +353,9 @@ class PostController extends Controller
 
     public function comment(Request $request, $id)
     {
-        if (!ProfileController::isProfileComplete(Auth::user())) {
-            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
-        }
+        // if (!ProfileController::isProfileComplete(Auth::user())) {
+        //     return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        // }
 
         $request->validate([
             'content' => 'required|string|max:1000'

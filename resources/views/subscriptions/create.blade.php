@@ -35,12 +35,34 @@
                 <form action="{{ route('subscriptions.store') }}" method="POST" class="subscription-form">
                     @csrf
                     <input type="hidden" name="plan_id" value="1"> <!-- Ganti "1" sesuai ID plan yang ada -->
-                    <button type="submit" class="btn btn-primary">Berlangganan Sekarang</button>
+                    <button type="submit"
+                        class="btn"
+                        style="background-color: #A0522D;  /* sienna (coklat hangat) */
+                            color: white;
+                            font-weight: 600;
+                            padding: 6px 16px;
+                            font-size: 0.95rem;
+                            border: none;
+                            border-radius: 5px;
+                            box-shadow: 0 3px 5px rgba(0,0,0,0.1);">
+                    Berlangganan Sekarang
+                    </button>
                 </form>
             </div>
             <div class="decoration-line"></div>
             <div class="back-link">
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
+                <a href="{{ route('home') }}"
+                class="btn"
+                style="background-color: #CD853F;  /* peru - coklat muda */
+                        color: white;
+                        font-weight: 600;
+                        padding: 6px 14px;
+                        font-size: 0.95rem;
+                        border: none;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                Kembali ke Home
+                </a>
             </div>
         </div>
     </div>

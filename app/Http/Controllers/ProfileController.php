@@ -22,6 +22,11 @@ class ProfileController extends Controller
         $user = Auth::user();
         $profile = $user->profile;
 
+        // Periksa apakah profil sudah lengkap
+        if (!$this->isProfileComplete($user)) {
+            return redirect()->route('profile.edit')->with('info', 'Kamu harus mengisi profil dahulu sebelum melihat profil.');
+        }
+
         // Ambil postingan pengguna yang login
         $posts = Post::with(['likes', 'comments'])
                      ->where('user_id', $user->id)
@@ -33,7 +38,14 @@ class ProfileController extends Controller
 
     public function edit()
     {
-        $profile = Auth::user()->profile ?? new Profile();
+        $user = Auth::user();
+        $profile = $user->profile ?? new Profile();
+
+        // Jika profil belum ada email, gunakan email dari tabel users
+        if (!$profile->email) {
+            $profile->email = $user->email;
+        }
+
         return view('profile.edit', compact('profile'));
     }
 
@@ -45,15 +57,20 @@ class ProfileController extends Controller
         $request->validate([
             'foto_profile' => 'nullable|image|max:2048',
             'nama_lengkap' => 'required|string|max:255',
-            'nama_panggilan' => 'nullable|string|max:255',
-            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
-            'tanggal_lahir' => 'nullable|date',
-            'tempat_lahir' => 'nullable|string|max:255',
-            'alamat_lengkap' => 'nullable|string',
-            'nomor_telepon' => 'nullable|string|max:15',
+            'nama_panggilan' => 'required|string|max:255',
+            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+            'tanggal_lahir' => 'required|date',
+            'tempat_lahir' => 'required|string|max:255',
+            'alamat_lengkap' => 'required|string',
+            'nomor_telepon' => 'required|string|max:15|regex:/^[0-9]+$/', // Hanya angka, tanpa tanda - atau string
             'email' => 'required|email|max:255|unique:profiles,email,' . ($profile->id ?? 'NULL'),
-            'media_sosial.*' => 'nullable|string|max:255',
-            'bio' => 'nullable|string|max:500',
+            'media_sosial' => 'required|array|min:1', // Minimal 1 media sosial wajib
+            'media_sosial.*' => 'nullable|string|max:255', // Setiap field opsional tapi total minimal 1
+            'bio' => 'required|string|max:500',
+        ], [
+            'nomor_telepon.regex' => 'Nomor telepon hanya boleh berisi angka (tanpa tanda - atau huruf).',
+            'media_sosial.required' => 'Setidaknya satu media sosial harus diisi.',
+            'media_sosial.min' => 'Setidaknya satu media sosial harus diisi.',
         ]);
 
         $data = $request->only([
@@ -98,6 +115,16 @@ class ProfileController extends Controller
     public static function isProfileComplete($user)
     {
         $profile = $user->profile;
-        return $profile && !empty($profile->nama_lengkap) && !empty($profile->email);
+        return $profile &&
+               !empty($profile->nama_lengkap) &&
+               !empty($profile->nama_panggilan) &&
+               !empty($profile->jenis_kelamin) &&
+               !empty($profile->tanggal_lahir) &&
+               !empty($profile->tempat_lahir) &&
+               !empty($profile->alamat_lengkap) &&
+               !empty($profile->nomor_telepon) &&
+               !empty($profile->email) &&
+               !empty($profile->media_sosial) &&
+               !empty($profile->bio);
     }
 }

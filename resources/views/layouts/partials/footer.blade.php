@@ -16,6 +16,6 @@
         </div>
     </div>
     <div class="footer-copyright">
-        <p>© 2025 Nama Brand. All Rights Reserved.</p>
+        <p>© 2025 Ahli Kerja. All Rights Reserved.</p>
     </div>
 </footer>

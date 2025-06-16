@@ -40,7 +40,6 @@ class OfferController extends Controller
         return redirect()->back()->with('success', 'Penawaran berhasil dikirim!');
     }
 
-    // Method lainnya tetap sama
     public function accept($offerId)
     {
         $offer = Offer::findOrFail($offerId);
@@ -107,5 +106,22 @@ class OfferController extends Controller
         $acceptedOffer = $post->offers()->where('status', 'accepted')->first();
 
         return view('offers.index', compact('post', 'offers', 'acceptedOffer'));
+    }
+
+    public function myOffers()
+    {
+        $contractor = Auth::user();
+
+        // Pastikan user adalah kontraktor dan disetujui
+        if ($contractor->role !== 'kontraktor' || (!$contractor->contractorProfile || !$contractor->contractorProfile->approved)) {
+            return redirect()->route('home')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        $offers = Offer::where('contractor_id', $contractor->id)
+                      ->with('post.user')
+                      ->orderBy('created_at', 'desc')
+                      ->get();
+
+        return view('offers.my-offers', compact('offers'));
     }
 }

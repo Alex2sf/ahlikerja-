@@ -5,9 +5,31 @@
 @section('content')
     <div class="container">
         <div class="edit-profile-section">
+            <!-- Back Link -->
+            <div class="back-link-top">
+                <a href="{{ url()->previous() }}"
+                class="btn"
+                style="background-color: #CD853F; /* coklat muda (peru) */
+                        color: white;
+                        font-weight: 600;
+                        padding: 6px 14px;
+                        font-size: 0.95rem;
+                        border: none;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+                        text-decoration: none;
+                        display: inline-block;
+                        cursor: pointer;">
+                    Kembali
+                </a>
+            </div>
+
             <h1>Edit Profil Saya</h1>
             @if (session('success'))
                 <div class="notification success">{{ session('success') }}</div>
+            @endif
+            @if (session('info'))
+                <div class="notification info">{{ session('info') }}</div>
             @endif
             <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
                 @csrf
@@ -16,20 +38,19 @@
                     <!-- Kolom Kiri -->
                     <div class="form-column">
                         <div class="form-group">
-                            <label>Foto Profil:</label>
-                            <div class="profile-photo-preview">
-                                @if ($profile->foto_profile)
-                                    <img src="{{ Storage::url($profile->foto_profile) }}" alt="Foto Profil">
-                                @else
-                                    <img src="{{ asset('images/default-profile.png') }}" alt="Foto Profil Default">
-                                @endif
-                            </div>
-                            <input type="file" name="foto_profile" accept="image/*">
-                            @error('foto_profile')
-                                <span class="error-message">{{ $message }}</span>
-                            @enderror
+                        <label>Foto Profil (wajib):</label>
+                        <div class="profile-photo-preview">
+                            @if ($profile->foto_profile)
+                                <img src="{{ Storage::url($profile->foto_profile) }}" alt="Foto Profil">
+                            @else
+                                <img src="{{ asset('images/default-profile.png') }}" alt="Foto Profil Default">
+                            @endif
                         </div>
-
+                        <input type="file" name="foto_profile" accept="image/*" required>
+                        @error('foto_profile')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+</div>
                         <div class="form-group">
                             <label>Nama Lengkap:</label>
                             <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap', $profile->nama_lengkap) }}" required>
@@ -40,26 +61,38 @@
 
                         <div class="form-group">
                             <label>Nama Panggilan:</label>
-                            <input type="text" name="nama_panggilan" value="{{ old('nama_panggilan', $profile->nama_panggilan) }}">
+                            <input type="text" name="nama_panggilan" value="{{ old('nama_panggilan', $profile->nama_panggilan) }}" required>
+                            @error('nama_panggilan')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group">
                             <label>Jenis Kelamin:</label>
-                            <select name="jenis_kelamin">
-                                <option value="">Pilih</option>
+                            <select name="jenis_kelamin" required>
+                                <option value="" {{ !old('jenis_kelamin', $profile->jenis_kelamin) ? 'selected' : '' }}>Pilih</option>
                                 <option value="Laki-laki" {{ old('jenis_kelamin', $profile->jenis_kelamin) === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
                                 <option value="Perempuan" {{ old('jenis_kelamin', $profile->jenis_kelamin) === 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                             </select>
+                            @error('jenis_kelamin')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group">
                             <label>Tanggal Lahir:</label>
-                            <input type="date" name="tanggal_lahir" value="{{ old('tanggal_lahir', $profile->tanggal_lahir ? $profile->tanggal_lahir->format('Y-m-d') : '') }}">
+                            <input type="date" name="tanggal_lahir" value="{{ old('tanggal_lahir', $profile->tanggal_lahir ? $profile->tanggal_lahir->format('Y-m-d') : '') }}" required>
+                            @error('tanggal_lahir')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group">
                             <label>Tempat Lahir:</label>
-                            <input type="text" name="tempat_lahir" value="{{ old('tempat_lahir', $profile->tempat_lahir) }}">
+                            <input type="text" name="tempat_lahir" value="{{ old('tempat_lahir', $profile->tempat_lahir) }}" required>
+                            @error('tempat_lahir')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
 
@@ -67,12 +100,18 @@
                     <div class="form-column">
                         <div class="form-group">
                             <label>Alamat Lengkap:</label>
-                            <textarea name="alamat_lengkap" rows="3">{{ old('alamat_lengkap', $profile->alamat_lengkap) }}</textarea>
+                            <textarea name="alamat_lengkap" rows="3" required>{{ old('alamat_lengkap', $profile->alamat_lengkap) }}</textarea>
+                            @error('alamat_lengkap')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group">
                             <label>Nomor Telepon:</label>
-                            <input type="text" name="nomor_telepon" value="{{ old('nomor_telepon', $profile->nomor_telepon) }}">
+                            <input type="text" name="nomor_telepon" value="{{ old('nomor_telepon', $profile->nomor_telepon) }}" required placeholder="Contoh: 081234567890">
+                            @error('nomor_telepon')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group">
@@ -84,15 +123,19 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Media Sosial (maks 5):</label>
+                            <label>Media Sosial (min 1, maks 5):</label>
+                            <p class="help-text">Masukkan dalam format: username(platform), contoh: nino_09(instagram)</p>
                             @for ($i = 0; $i < 5; $i++)
-                                <input type="text" name="media_sosial[]" value="{{ old('media_sosial.' . $i, $profile->media_sosial[$i] ?? '') }}" placeholder="Media Sosial {{ $i + 1 }}">
+                                <input type="text" name="media_sosial[]" value="{{ old('media_sosial.' . $i, $profile->media_sosial[$i] ?? '') }}" placeholder="Contoh: nino_09(instagram)" {{ $i == 0 ? 'required' : '' }}>
+                                @error('media_sosial.' . $i)
+                                    <span class="error-message">{{ $message }}</span>
+                                @enderror
                             @endfor
                         </div>
 
                         <div class="form-group">
                             <label>Bio:</label>
-                            <textarea name="bio" rows="4" placeholder="Tulis bio Anda...">{{ old('bio', $profile->bio) }}</textarea>
+                            <textarea name="bio" rows="4" placeholder="Tulis bio Anda..." required>{{ old('bio', $profile->bio) }}</textarea>
                             @error('bio')
                                 <span class="error-message">{{ $message }}</span>
                             @enderror
@@ -101,8 +144,12 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
+                <button type="submit"
+                    class="btn"
+                    style="background-color: #8B4513; color: white; border: none; padding: 12px 24px; font-size: 18px; border-radius: 6px;">
+                    Simpan
+                </button>
+
                 </div>
             </form>
         </div>
@@ -118,6 +165,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
+            position: relative; /* Untuk positioning tombol */
         }
 
         .edit-profile-section h1 {
@@ -126,6 +174,13 @@
             color: #5a3e36;
             text-align: center;
             margin-bottom: 30px;
+        }
+
+        /* Back Link di Pojok Kiri Atas */
+        .back-link-top {
+            position: absolute;
+            top: 15px;
+            left: 15px;
         }
 
         /* Form Columns */
@@ -181,6 +236,14 @@
             padding: 5px 0;
         }
 
+        /* Help Text for Media Sosial */
+        .help-text {
+            font-size: 12px;
+            color: #6b5848;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
         /* Profile Photo Preview */
         .profile-photo-preview {
             margin-bottom: 15px;
@@ -204,15 +267,24 @@
         }
 
         /* Notification */
-        .notification.success {
+        .notification {
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             text-align: center;
             font-size: 14px;
+        }
+
+        .notification.success {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
+        }
+
+        .notification.info {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
         }
 
         /* Button Group */
@@ -280,8 +352,13 @@
             }
 
             .btn {
-                width: 100%;
-                text-align: center;
+                width: auto; /* Tombol tidak perlu full width di layar kecil */
+                padding: 8px 16px;
+            }
+
+            .back-link-top {
+                top: 10px;
+                left: 10px;
             }
         }
     </style>

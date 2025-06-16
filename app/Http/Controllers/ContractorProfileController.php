@@ -29,71 +29,79 @@ class ContractorProfileController extends Controller
         return view('contractor.profile.edit', compact('profile'));
     }
 
-    public function update(Request $request)
-    {
-        $user = Auth::user();
-        $profile = $user->contractorProfile ?? new ContractorProfile();
+public function update(Request $request)
+{
+    $user = Auth::user();
+    $profile = $user->contractorProfile ?? new ContractorProfile();
 
-        $request->validate([
-            'foto_profile' => 'nullable|image|max:2048',
-            'nomor_telepon' => 'nullable|string|max:15',
-            'alamat' => 'nullable|string',
-            'perusahaan' => 'required|string|max:255',
-            'nomor_npwp' => 'required|string|max:255',
-            'bidang_usaha.*' => 'nullable|string|max:255',
-            'dokumen_pendukung.*' => 'nullable|file|max:2048',
-            'portofolio.*' => 'nullable|file|max:2048',
-            'legalitas.*' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
-            'bio' => 'nullable|string|max:500',
-        ]);
+    $request->validate([
+        'foto_profile' => 'nullable|image|max:2048',
+        'nomor_telepon' => 'nullable|string|max:15',
+        'alamat' => 'nullable|string',
+        'perusahaan' => 'required|string|max:255',
+        'nomor_npwp' => 'required|string|max:255',
+        'bidang_usaha.*' => 'nullable|string|max:255',
+        'dokumen_pendukung.*' => 'nullable|file|max:2048',
+        'portofolio.*' => 'nullable|file|max:2048',
+        'legalitas.*' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+        'bio' => 'nullable|string|max:500',
+    ]);
 
-        $data = $request->only([
-            'nomor_telepon', 'alamat', 'perusahaan', 'nomor_npwp', 'bio'
-        ]);
+    $data = $request->only([
+        'nomor_telepon', 'alamat', 'perusahaan', 'nomor_npwp', 'bio'
+    ]);
 
-        if ($request->hasFile('foto_profile')) {
-            if ($profile->foto_profile) {
-                Storage::disk('public')->delete($profile->foto_profile);
-            }
-            $data['foto_profile'] = $request->file('foto_profile')->store('contractors', 'public');
+    // Foto Profile
+    if ($request->hasFile('foto_profile')) {
+        if ($profile->foto_profile) {
+            Storage::disk('public')->delete($profile->foto_profile);
         }
-
-        $data['bidang_usaha'] = array_filter($request->input('bidang_usaha', []));
-
-        if ($request->hasFile('dokumen_pendukung')) {
-            $dokumenPendukung = $profile->dokumen_pendukung ?? [];
-            foreach ($request->file('dokumen_pendukung') as $file) {
-                $dokumenPendukung[] = $file->store('contractors/documents', 'public');
-            }
-            $data['dokumen_pendukung'] = $dokumenPendukung;
-        }
-
-        if ($request->hasFile('portofolio')) {
-            $portofolio = $profile->portofolio ?? [];
-            foreach ($request->file('portofolio') as $file) {
-                $portofolio[] = $file->store('contractors/portfolios', 'public');
-            }
-            $data['portofolio'] = $portofolio;
-        }
-
-        if ($request->hasFile('legalitas')) {
-            $legalitas = $profile->legalitas ?? [];
-            foreach ($request->file('legalitas') as $file) {
-                $legalitas[] = $file->store('contractors/legalitas', 'public');
-            }
-            $data['legalitas'] = $legalitas;
-        }
-
-        if ($profile->exists) {
-            $profile->update($data);
-        } else {
-            $data['user_id'] = $user->id;
-            ContractorProfile::create($data);
-        }
-
-        return redirect()->route('contractor.profile.show')->with('success', 'Profil berhasil diperbarui!');
+        $fotoProfile = $request->file('foto_profile');
+        $fotoProfileName = $user->id . '_' . time() . '_' . $fotoProfile->getClientOriginalName();
+        $data['foto_profile'] = $fotoProfile->storeAs('contractors', $fotoProfileName, 'public');
     }
 
+    $data['bidang_usaha'] = array_filter($request->input('bidang_usaha', []));
+
+    // Dokumen Pendukung
+    if ($request->hasFile('dokumen_pendukung')) {
+        $dokumenPendukung = $profile->dokumen_pendukung ?? [];
+        foreach ($request->file('dokumen_pendukung') as $file) {
+            $fileName = $user->id . '_' . time() . '_' . $file->getClientOriginalName();
+            $dokumenPendukung[] = $file->storeAs('contractors/documents', $fileName, 'public');
+        }
+        $data['dokumen_pendukung'] = $dokumenPendukung;
+    }
+
+    // Portofolio
+    if ($request->hasFile('portofolio')) {
+        $portofolio = $profile->portofolio ?? [];
+        foreach ($request->file('portofolio') as $file) {
+            $fileName = $user->id . '_' . time() . '_' . $file->getClientOriginalName();
+            $portofolio[] = $file->storeAs('contractors/portfolios', $fileName, 'public');
+        }
+        $data['portofolio'] = $portofolio;
+    }
+
+    // Legalitas
+    if ($request->hasFile('legalitas')) {
+        $legalitas = $profile->legalitas ?? [];
+        foreach ($request->file('legalitas') as $file) {
+            $fileName = $user->id . '_' . time() . '_' . $file->getClientOriginalName();
+            $legalitas[] = $file->storeAs('contractors/legalitas', $fileName, 'public');
+        }
+        $data['legalitas'] = $legalitas;
+    }
+
+    if ($profile->exists) {
+        $profile->update($data);
+    } else {
+        $data['user_id'] = $user->id;
+        ContractorProfile::create($data);
+    }
+
+    return redirect()->route('contractor.profile.show')->with('success', 'Profil berhasil diperbarui!');
+}
     public function show()
     {
         $profile = Auth::user()->contractorProfile;

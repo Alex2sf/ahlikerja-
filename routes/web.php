@@ -17,7 +17,7 @@ use App\Http\Controllers\NotificationController;
 
 
 Route::middleware('auth')->group(function () {
-
+    Route::get('/offers/my-offers', [OfferController::class, 'myOffers'])->name('offers.my-offers');
     Route::post('orders/{id}/payment/{type}/stage/{stage}', [OrderController::class, 'uploadPaymentProof'])->name('orders.uploadPaymentProof');
     Route::post('/bookings/{id}/final-approve', [BookingController::class, 'finalApprove'])->name('bookings.finalApprove');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->middleware('auth');
@@ -91,9 +91,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/home', function () {
-        return view('home');
-    })->name('home'); // Tambahkan nama route 'home'
+Route::get('/home', [PostController::class, 'getLatestTenders'])->name('home');
 });
 
 Route::get('/', [ContractorProfileController::class, 'welcome'])->name('welcome');

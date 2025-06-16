@@ -173,8 +173,16 @@
 
             <!-- Tombol Aksi -->
             <div class="button-group">
-                <a href="{{ route('contractor.profile.edit') }}" class="btn btn-primary">Edit Profil</a>
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
+<a href="{{ route('contractor.profile.edit') }}" class="btn"
+   style="background-color: #008080; color: white; border: none; padding: 10px 20px; border-radius: 5px;">
+   Edit Profil
+</a>
+
+
+<a href="{{ route('home') }}" class="btn"
+   style="background-color: #a0522d; color: white; border: none; padding: 10px 20px; border-radius: 5px;">
+   Kembali ke Home
+</a>
             </div>
         </div>
     </div>

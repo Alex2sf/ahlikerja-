@@ -5,6 +5,25 @@
 @section('content')
     <div class="container">
         <div class="contractors-section">
+            <!-- Back Link -->
+            <div class="back-link-top">
+                <a href="{{ url()->previous() }}"
+                class="btn"
+                style="background-color: #CD853F; /* coklat muda (peru) */
+                        color: white;
+                        font-weight: 600;
+                        padding: 6px 14px;
+                        font-size: 0.95rem;
+                        border: none;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+                        text-decoration: none;
+                        display: inline-block;
+                        cursor: pointer;">
+                    Kembali
+                </a>
+            </div>
+
             <h1>Daftar Semua Kontraktor</h1>
             @if (session('success'))
                 <div class="notification success">{{ session('success') }}</div>
@@ -26,7 +45,10 @@
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Cari & Filter</button>
+                <button type="submit"
+                    style="background-color: #27ae60; color: white; font-weight: 600; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.3s ease;">
+                    Cari & Filter
+                </button>
                 <a href="{{ route('contractors.index') }}" class="btn btn-reset">Reset</a>
             </form>
 
@@ -79,18 +101,24 @@
 
                         @if (Auth::check() && Auth::user()->role === 'user')
                             <div class="button-group">
-                                <a href="{{ route('bookings.create', $contractor->id) }}" class="btn btn-primary">Pesan</a>
-                                <a href="{{ route('chats.index', $contractor->id) }}" class="btn btn-secondary">Chat</a>
+                               <a href="{{ route('bookings.create', $contractor->id) }}"
+                                class="btn"
+                                style="background-color: #3498db; color: white; font-weight: 600; padding: 8px 16px; border-radius: 5px; text-decoration: none;">
+                                Pesan
+                                </a>
+
+                                <a href="{{ route('chats.index', $contractor->id) }}"
+                                class="btn"
+                                style="background-color: #7f8c8d; color: white; font-weight: 600; padding: 8px 16px; border-radius: 5px; text-decoration: none;">
+                                Chat
+                                </a>
+
                             </div>
                         @endif
                     </div>
                     @endforeach
                 </div>
             @endif
-
-            <div class="back-link">
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
-            </div>
         </div>
     </div>
 
@@ -104,6 +132,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
+            position: relative; /* Untuk positioning tombol */
         }
 
         .contractors-section h1 {
@@ -112,6 +141,13 @@
             color: #5a3e36;
             text-align: center;
             margin-bottom: 30px;
+        }
+
+        /* Back Link di Pojok Kiri Atas */
+        .back-link-top {
+            position: absolute;
+            top: 15px;
+            left: 15px;
         }
 
         /* Search and Filter Form */
@@ -281,12 +317,6 @@
             border: 1px solid #c3e6cb;
         }
 
-        /* Back Link */
-        .back-link {
-            text-align: center;
-            margin-top: 30px;
-        }
-
         /* Responsive Design */
         @media (max-width: 1024px) {
             .contractor-grid {
@@ -324,8 +354,13 @@
             }
 
             .btn {
-                width: 100%;
-                text-align: center;
+                width: auto; /* Tombol tidak perlu full width di layar kecil */
+                padding: 6px 12px;
+            }
+
+            .back-link-top {
+                top: 10px;
+                left: 10px;
             }
         }
     </style>

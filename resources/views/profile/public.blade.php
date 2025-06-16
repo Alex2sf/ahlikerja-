@@ -65,7 +65,7 @@
 
             <!-- Daftar Postingan (Kanan) -->
             <div class="posts-section">
-                <h1>Daftar Postingan Saya</h1>
+                <h1>Daftar Postingan {{ $user->name }}</h1>
                 @if ($posts->isEmpty())
                     <p class="text-center text-muted">Tidak ada postingan.</p>
                 @else

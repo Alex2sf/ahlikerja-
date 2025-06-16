@@ -5,7 +5,26 @@
 @section('content')
     <div class="container">
         <div class="orders-section">
-            <h1>Keranjang Pemesanan Saya</h1>
+            <!-- Back Link -->
+            <div class="back-link-top">
+                <a href="{{ url()->previous() }}"
+                class="btn"
+                style="background-color: #CD853F; /* coklat muda (peru) */
+                        color: white;
+                        font-weight: 600;
+                        padding: 6px 14px;
+                        font-size: 0.95rem;
+                        border: none;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+                        text-decoration: none;
+                        display: inline-block;
+                        cursor: pointer;">
+                    Kembali
+                </a>
+            </div>
+
+            <h1>Keranjang Pembayaran</h1>
             @if (session('success'))
                 <div class="notification success">{{ session('success') }}</div>
             @endif
@@ -26,18 +45,43 @@
                                     </a>
                                 </p>
                                 <p>Status: <span class="status {{ $order->is_completed ? 'completed' : 'pending' }}">{{ $order->is_completed ? 'Selesai' : 'Belum Selesai' }}</span></p>
+<small style="color: black; font-weight: bold;">
+    Jika Anda memiliki beberapa tahapan pembayaran, pastikan setiap tahapan diselesaikan secara berurutan.<br>
+        <span style="color: red;">Contoh: Tahap 1 →  Selesai.</span><br>
+    <span style="color: red;">Contoh: Tahap 1 → Tahap 2 → Selesai.</span><br>
+    <span style="color: red;">Contoh: Tahap 1 → Tahap 2 → Tahap 3 → Selesai.</span><br>
+
+    Setelah status menjadi <strong style="color: red;">Selesai</strong>, maka tahapan terakhir dianggap terselesaikan otomatis dan tidak perlu melanjutkan ke tahap berikutnya.
+</small>
 
                                 @if (!$order->is_completed)
-                                    <div class="button-group mt-3">
+                                    <div class="button-group">
                                         <!-- Tombol Selesai -->
-                                        <button class="btn btn-success" onclick="document.getElementById('complete-form-order-{{ $order->id }}').style.display = 'block';">Selesai</button>
-                                        <form id="complete-form-order-{{ $order->id }}" action="{{ route('orders.complete', $order->id) }}" method="POST" enctype="multipart/form-data" style="display: none;">
-                                            @csrf
+<button class="btn btn-success"
+        onclick="toggleForm('complete-form-order-{{ $order->id }}')"
+        style="background-color: #5a3e36; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 0.3s ease;"
+        onmouseover="this.style.backgroundColor='#3f2b24'"
+        onmouseout="this.style.backgroundColor='#5a3e36'">Selesai</button>
+                                        <!-- Tombol Pembayaran Bertahap (Opsional) -->
+                                        @if ($order->payment_stage < 4)
+<button class="btn btn-primary"
+        onclick="toggleForm('payment-form-order-{{ $order->id }}')"
+        style="background-color: #5a3e36; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 0.3s ease;"
+        onmouseover="this.style.backgroundColor='#3f2b24'"
+        onmouseout="this.style.backgroundColor='#5a3e36'">Pembayaran Tahap {{ $order->payment_stage + 1 }}</button>                                        @endif
+                                    </div>
+
+                                    <!-- Form Selesai -->
+                                    <form id="complete-form-order-{{ $order->id }}" action="{{ route('orders.complete', $order->id) }}" method="POST" enctype="multipart/form-data" class="form-hidden">
+                                        @csrf
+                                        <div class="form-row">
                                             <label>Bukti Pembayaran Terakhir (Wajib):</label>
                                             <input type="file" name="payment_proof" accept="image/*" required>
                                             @error('payment_proof')
                                                 <span class="error-message">{{ $message }}</span>
                                             @enderror
+                                        </div>
+                                        <div class="form-row">
                                             <label>Rating (1-5):</label>
                                             <select name="rating" required>
                                                 <option value="1">1</option>
@@ -46,44 +90,68 @@
                                                 <option value="4">4</option>
                                                 <option value="5">5</option>
                                             </select>
+                                        </div>
+                                        <div class="form-row">
                                             <label>Ulasan:</label>
                                             <textarea name="review" placeholder="Tulis ulasan Anda..." rows="3" required></textarea>
-                                            <label>Bukti Pembayaran Tambahan (Opsional):</label>
-                                            <input type="file" name="pembayaran" accept="image/*">
-                                            @error('pembayaran')
-                                                <span class="error-message">{{ $message }}</span>
-                                            @enderror
-                                            <button type="submit" class="btn btn-primary mt-2">Selesaikan dan Kirim Ulasan</button>
-                                            <button type="button" class="btn btn-secondary mt-2" onclick="document.getElementById('complete-form-order-{{ $order->id }}').style.display = 'none';">Batal</button>
-                                        </form>
+                                        </div>
+                                        <div class="form-actions">
+<button type="submit"
+        class="btn"
+        style="background-color: #8B4513;   /* saddle brown - coklat gelap */
+               color: white;
+               font-weight: 600;
+               padding: 8px 18px;
+               font-size: 0.95rem;
+               border: none;
+               border-radius: 5px;
+               box-shadow: 0 3px 6px rgba(0,0,0,0.15);">
+  Selesaikan dan Kirim Ulasan
+</button>
+                                            <button type="button" class="btn btn-secondary" onclick="toggleForm('complete-form-order-{{ $order->id }}')">Batal</button>
+                                        </div>
+                                    </form>
 
-                                        <!-- Tombol Pembayaran Bertahap (Opsional) -->
-                                        @if ($order->payment_stage < 4)
-                                            <button class="btn btn-primary" onclick="document.getElementById('payment-form-order-{{ $order->id }}').style.display = 'block';">Pembayaran Tahap {{ $order->payment_stage + 1 }}</button>
-                                            <form id="payment-form-order-{{ $order->id }}" action="{{ route('orders.uploadPaymentProof', ['id' => $order->id, 'type' => 'order', 'stage' => $order->payment_stage + 1]) }}" method="POST" enctype="multipart/form-data" style="display: none;">
-                                                @csrf
+                                    <!-- Form Pembayaran Bertahap -->
+                                    @if ($order->payment_stage < 4)
+                                        <form id="payment-form-order-{{ $order->id }}" action="{{ route('orders.uploadPaymentProof', ['id' => $order->id, 'type' => 'order', 'stage' => $order->payment_stage + 1]) }}" method="POST" enctype="multipart/form-data" class="form-hidden">
+                                            @csrf
+                                            <div class="form-row">
                                                 <label>Bukti Pembayaran Tahap {{ $order->payment_stage + 1 }}:</label>
                                                 <input type="file" name="payment_proof" accept="image/*" required>
                                                 @error('payment_proof')
                                                     <span class="error-message">{{ $message }}</span>
                                                 @enderror
-                                                <button type="submit" class="btn btn-primary mt-2">Unggah</button>
-                                                <button type="button" class="btn btn-secondary mt-2" onclick="document.getElementById('payment-form-order-{{ $order->id }}').style.display = 'none';">Batal</button>
-                                            </form>
-                                        @endif
-                                    </div>
+                                            </div>
+                                            <div class="form-actions">
+                                            <button type="submit"
+                                                    class="btn"
+                                                    style="background-color: #8B4513;  /* saddle brown */
+                                                        color: white;
+                                                        font-weight: 600;
+                                                        padding: 6px 14px;
+                                                        font-size: 0.95rem;
+                                                        border: none;
+                                                        border-radius: 5px;
+                                                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            Unggah
+                                            </button>
+                                                <button type="button" class="btn btn-secondary" onclick="toggleForm('payment-form-order-{{ $order->id }}')">Batal</button>
+                                            </div>
+                                        </form>
+                                    @endif
 
                                     <!-- Tampilkan Bukti Pembayaran yang Sudah Diunggah -->
                                     @for ($i = 1; $i <= $order->payment_stage; $i++)
                                         @if ($order->{"payment_proof_$i"})
-                                            <div class="payment-proof mt-3">
+                                            <div class="payment-proof">
                                                 <p>Bukti Pembayaran Tahap {{ $i }}:</p>
                                                 <img src="{{ Storage::url($order->{"payment_proof_$i"}) }}" alt="Bukti Pembayaran Tahap {{ $i }}" class="payment-image">
                                             </div>
                                         @endif
                                     @endfor
                                 @elseif ($order->is_completed && $order->review)
-                                    <div class="review-details mt-3">
+                                    <div class="review-details">
                                         <p>Rating: {{ $order->review->rating }}/5</p>
                                         <p>Ulasan: {{ $order->review->review ?? 'Tidak ada ulasan' }}</p>
                                         @if ($order->review->pembayaran)
@@ -95,7 +163,7 @@
                                         <!-- Tampilkan semua bukti pembayaran -->
                                         @for ($i = 1; $i <= $order->payment_stage; $i++)
                                             @if ($order->{"payment_proof_$i"})
-                                                <div class="payment-proof mt-3">
+                                                <div class="payment-proof">
                                                     <p>Bukti Pembayaran Tahap {{ $i }}:</p>
                                                     <img src="{{ Storage::url($order->{"payment_proof_$i"}) }}" alt="Bukti Pembayaran Tahap {{ $i }}" class="payment-image">
                                                 </div>
@@ -123,18 +191,44 @@
                                     </a>
                                 </p>
                                 <p>Status: <span class="status {{ $bookingOrder->is_completed ? 'completed' : 'pending' }}">{{ $bookingOrder->is_completed ? 'Selesai' : 'Belum Selesai' }}</span></p>
+<small style="color: black; font-weight: bold;">
+    Jika Anda memiliki beberapa tahapan pembayaran, pastikan setiap tahapan diselesaikan secara berurutan.<br>
+        <span style="color: red;">Contoh: Tahap 1 →  Selesai.</span><br>
+    <span style="color: red;">Contoh: Tahap 1 → Tahap 2 → Selesai.</span><br>
+    <span style="color: red;">Contoh: Tahap 1 → Tahap 2 → Tahap 3 → Selesai.</span><br>
+
+    Setelah status menjadi <strong style="color: red;">Selesai</strong>, maka tahapan terakhir dianggap terselesaikan otomatis dan tidak perlu melanjutkan ke tahap berikutnya.
+</small>
+
 
                                 @if (!$bookingOrder->is_completed)
-                                    <div class="button-group mt-3">
+                                    <div class="button-group">
                                         <!-- Tombol Selesai -->
-                                        <button class="btn btn-success" onclick="document.getElementById('complete-form-booking-{{ $bookingOrder->id }}').style.display = 'block';">Selesai</button>
-                                        <form id="complete-form-booking-{{ $bookingOrder->id }}" action="{{ route('bookings.complete', $bookingOrder->id) }}" method="POST" enctype="multipart/form-data" style="display: none;">
-                                            @csrf
+<button class="btn btn-success"
+        onclick="toggleForm('complete-form-booking-{{ $bookingOrder->id }}')"
+        style="background-color: #5a3e36; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 0.3s ease;"
+        onmouseover="this.style.backgroundColor='#3f2b24'"
+        onmouseout="this.style.backgroundColor='#5a3e36'">Selesai</button>
+                                        <!-- Tombol Pembayaran Bertahap (Opsional) -->
+                                        @if ($bookingOrder->payment_stage < 4)
+<button class="btn btn-primary"
+        onclick="toggleForm('payment-form-booking-{{ $bookingOrder->id }}')"
+        style="background-color: #5a3e36; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 0.3s ease;"
+        onmouseover="this.style.backgroundColor='#3f2b24'"
+        onmouseout="this.style.backgroundColor='#5a3e36'">Pembayaran Tahap {{ $bookingOrder->payment_stage + 1 }}</button>                                        @endif
+                                    </div>
+
+                                    <!-- Form Selesai -->
+                                    <form id="complete-form-booking-{{ $bookingOrder->id }}" action="{{ route('bookings.complete', $bookingOrder->id) }}" method="POST" enctype="multipart/form-data" class="form-hidden">
+                                        @csrf
+                                        <div class="form-row">
                                             <label>Bukti Pembayaran Terakhir (Wajib):</label>
                                             <input type="file" name="payment_proof" accept="image/*" required>
                                             @error('payment_proof')
                                                 <span class="error-message">{{ $message }}</span>
                                             @enderror
+                                        </div>
+                                        <div class="form-row">
                                             <label>Rating (1-5):</label>
                                             <select name="rating" required>
                                                 <option value="1">1</option>
@@ -143,44 +237,68 @@
                                                 <option value="4">4</option>
                                                 <option value="5">5</option>
                                             </select>
+                                        </div>
+                                        <div class="form-row">
                                             <label>Ulasan:</label>
                                             <textarea name="review" placeholder="Tulis ulasan Anda..." rows="3" required></textarea>
-                                            <label>Bukti Pembayaran Tambahan (Opsional):</label>
-                                            <input type="file" name="pembayaran" accept="image/*">
-                                            @error('pembayaran')
-                                                <span class="error-message">{{ $message }}</span>
-                                            @enderror
-                                            <button type="submit" class="btn btn-primary mt-2">Selesaikan dan Kirim Ulasan</button>
-                                            <button type="button" class="btn btn-secondary mt-2" onclick="document.getElementById('complete-form-booking-{{ $bookingOrder->id }}').style.display = 'none';">Batal</button>
-                                        </form>
+                                        </div>
+                                        <div class="form-actions">
+                                        <button type="submit"
+                                                class="btn"
+                                                style="background-color: #8B4513;   /* saddle brown - coklat gelap */
+                                                    color: white;
+                                                    font-weight: 600;
+                                                    padding: 8px 18px;
+                                                    font-size: 0.95rem;
+                                                    border: none;
+                                                    border-radius: 5px;
+                                                    box-shadow: 0 3px 6px rgba(0,0,0,0.15);">
+                                        Selesaikan dan Kirim Ulasan
+                                        </button>
+                                            <button type="button" class="btn btn-secondary" onclick="toggleForm('complete-form-booking-{{ $bookingOrder->id }}')">Batal</button>
+                                        </div>
+                                    </form>
 
-                                        <!-- Tombol Pembayaran Bertahap (Opsional) -->
-                                        @if ($bookingOrder->payment_stage < 4)
-                                            <button class="btn btn-primary" onclick="document.getElementById('payment-form-booking-{{ $bookingOrder->id }}').style.display = 'block';">Pembayaran Tahap {{ $bookingOrder->payment_stage + 1 }}</button>
-                                            <form id="payment-form-booking-{{ $bookingOrder->id }}" action="{{ route('orders.uploadPaymentProof', ['id' => $bookingOrder->id, 'type' => 'booking', 'stage' => $bookingOrder->payment_stage + 1]) }}" method="POST" enctype="multipart/form-data" style="display: none;">
-                                                @csrf
+                                    <!-- Form Pembayaran Bertahap -->
+                                    @if ($bookingOrder->payment_stage < 4)
+                                        <form id="payment-form-booking-{{ $bookingOrder->id }}" action="{{ route('orders.uploadPaymentProof', ['id' => $bookingOrder->id, 'type' => 'booking', 'stage' => $bookingOrder->payment_stage + 1]) }}" method="POST" enctype="multipart/form-data" class="form-hidden">
+                                            @csrf
+                                            <div class="form-row">
                                                 <label>Bukti Pembayaran Tahap {{ $bookingOrder->payment_stage + 1 }}:</label>
                                                 <input type="file" name="payment_proof" accept="image/*" required>
                                                 @error('payment_proof')
                                                     <span class="error-message">{{ $message }}</span>
                                                 @enderror
-                                                <button type="submit" class="btn btn-primary mt-2">Unggah</button>
-                                                <button type="button" class="btn btn-secondary mt-2" onclick="document.getElementById('payment-form-booking-{{ $bookingOrder->id }}').style.display = 'none';">Batal</button>
-                                            </form>
-                                        @endif
-                                    </div>
+                                            </div>
+                                            <div class="form-actions">
+                                            <button type="submit"
+                                                    class="btn"
+                                                    style="background-color: #8B4513;  /* saddle brown */
+                                                        color: white;
+                                                        font-weight: 600;
+                                                        padding: 6px 14px;
+                                                        font-size: 0.95rem;
+                                                        border: none;
+                                                        border-radius: 5px;
+                                                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            Unggah
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" onclick="toggleForm('payment-form-booking-{{ $bookingOrder->id }}')">Batal</button>
+                                            </div>
+                                        </form>
+                                    @endif
 
                                     <!-- Tampilkan Bukti Pembayaran yang Sudah Diunggah -->
                                     @for ($i = 1; $i <= $bookingOrder->payment_stage; $i++)
                                         @if ($bookingOrder->{"payment_proof_$i"})
-                                            <div class="payment-proof mt-3">
+                                            <div class="payment-proof">
                                                 <p>Bukti Pembayaran Tahap {{ $i }}:</p>
                                                 <img src="{{ Storage::url($bookingOrder->{"payment_proof_$i"}) }}" alt="Bukti Pembayaran Tahap {{ $i }}" class="payment-image">
                                             </div>
                                         @endif
                                     @endfor
                                 @elseif ($bookingOrder->is_completed && $bookingOrder->review)
-                                    <div class="review-details mt-3">
+                                    <div class="review-details">
                                         <p>Rating: {{ $bookingOrder->review->rating }}/5</p>
                                         <p>Ulasan: {{ $bookingOrder->review->review ?? 'Tidak ada ulasan' }}</p>
                                         @if ($bookingOrder->review->pembayaran)
@@ -192,7 +310,7 @@
                                         <!-- Tampilkan semua bukti pembayaran -->
                                         @for ($i = 1; $i <= $bookingOrder->payment_stage; $i++)
                                             @if ($bookingOrder->{"payment_proof_$i"})
-                                                <div class="payment-proof mt-3">
+                                                <div class="payment-proof">
                                                     <p>Bukti Pembayaran Tahap {{ $i }}:</p>
                                                     <img src="{{ Storage::url($bookingOrder->{"payment_proof_$i"}) }}" alt="Bukti Pembayaran Tahap {{ $i }}" class="payment-image">
                                                 </div>
@@ -205,15 +323,12 @@
                     @endif
                 </div>
             </div>
-
-            <div class="back-link">
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
-            </div>
         </div>
     </div>
 
     <style>
         /* Orders Section */
+
         .orders-section {
             width: 1200px;
             margin: 30px auto;
@@ -222,6 +337,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             border: 1px solid #e0d8c9;
+            position: relative;
         }
 
         .orders-section h1 {
@@ -230,6 +346,13 @@
             color: #5a3e36;
             text-align: center;
             margin-bottom: 20px;
+        }
+
+        /* Back Link di Pojok Kiri Atas */
+        .back-link-top {
+            position: absolute;
+            top: 15px;
+            left: 15px;
         }
 
         /* Orders Columns */
@@ -324,17 +447,30 @@
         }
 
         /* Review Form */
-        form label {
+        .form-hidden {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #e0d8c9;
+            border-radius: 5px;
+        }
+
+        .form-row {
+            margin-bottom: 8px;
+        }
+
+        .form-row label {
             display: block;
             font-family: 'Playfair Display', serif;
             font-size: 14px;
             color: #6b5848;
-            margin-top: 8px;
+            margin-bottom: 4px;
         }
 
-        form select,
-        form textarea,
-        form input[type="file"] {
+        .form-row select,
+        .form-row textarea,
+        .form-row input[type="file"] {
             width: 100%;
             padding: 6px;
             border: 1px solid #d4c8b5;
@@ -342,22 +478,31 @@
             font-size: 13px;
             color: #555;
             background-color: #fff;
-            margin-top: 4px;
         }
 
-        form textarea {
+        .form-row textarea {
             resize: vertical;
-            height: 70px;
+            height: 60px;
         }
 
-        form select:focus,
-        form textarea:focus,
-        form input[type="file"]:focus {
+        .form-row select:focus,
+        .form-row textarea:focus,
+        .form-row input[type="file"]:focus {
             border-color: #a8c3b8;
             outline: none;
         }
 
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
         /* Review Details */
+        .review-details {
+            margin-top: 10px;
+        }
+
         .review-details p {
             font-size: 14px;
             color: #555;
@@ -369,13 +514,13 @@
             display: block;
             color: #721c24;
             font-size: 12px;
-            margin-top: 5px;
+            margin-top: 3px;
         }
 
         /* Button Group */
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-top: 10px;
             flex-wrap: wrap;
         }
@@ -436,15 +581,10 @@
             border: 1px solid #c3e6cb;
         }
 
-        /* Back Link */
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
         /* Responsive Design */
         @media (max-width: 768px) {
             .orders-section {
+                width: 100%;
                 padding: 15px;
                 margin: 15px;
             }
@@ -467,19 +607,22 @@
             }
 
             .button-group {
-                flex-direction: column;
+                flex-direction: row;
                 gap: 5px;
             }
 
             .btn {
-                width: 100%;
-                text-align: center;
                 padding: 5px 10px;
                 font-size: 12px;
             }
 
-            form textarea {
-                height: 60px;
+            .back-link-top {
+                top: 10px;
+                left: 10px;
+            }
+
+            .form-row textarea {
+                height: 50px;
             }
 
             .payment-image {
@@ -487,4 +630,17 @@
             }
         }
     </style>
+
+    <script>
+        function toggleForm(formId) {
+            const form = document.getElementById(formId);
+            if (form.style.display === 'block') {
+                form.style.display = 'none';
+            } else {
+                // Sembunyikan semua form terlebih dahulu
+                document.querySelectorAll('.form-hidden').forEach(f => f.style.display = 'none');
+                form.style.display = 'block';
+            }
+        }
+    </script>
 @endsection

@@ -11,7 +11,7 @@ use App\Notifications\NewMessageNotification;
 
 class ChatController extends Controller
 {
-    public function index($receiverId = null)
+    public function index(Request $request, $receiverId = null)
     {
         $user = Auth::user();
         $chats = Chat::where(function ($query) use ($user) {
@@ -27,6 +27,37 @@ class ChatController extends Controller
 
         $receiver = $receiverId ? User::findOrFail($receiverId) : null;
         $selectedChats = collect();
+
+        // Cek apakah ada parameter postTitle dan pengguna adalah kontraktor
+        $postTitle = $request->query('postTitle');
+        if ($receiver && $postTitle && $user->role === 'kontraktor') {
+            // Cek apakah sudah ada chat sebelumnya antara sender dan receiver
+            $existingChat = Chat::where(function ($query) use ($user, $receiver) {
+                $query->where('sender_id', $user->id)
+                      ->where('receiver_id', $receiver->id)
+                      ->orWhere('sender_id', $receiver->id)
+                      ->where('receiver_id', $user->id);
+            })->first();
+
+            // Jika belum ada chat, kirim pesan otomatis
+            if (!$existingChat) {
+                if ($user->role === 'kontraktor' && (!$user->contractorProfile || !$user->contractorProfile->approved)) {
+                    return redirect()->back()->with('error', 'Anda harus disetujui oleh admin terlebih dahulu untuk mengirim chat.');
+                }
+
+                $templateMessage = "Halo, saya tertarik dengan postingan dengan judul \"{$postTitle}\". Apakah kita bisa berdiskusi tentang surat perjanjian kontrak ini?";
+
+                $chat = Chat::create([
+                    'sender_id' => $user->id,
+                    'receiver_id' => $receiver->id,
+                    'message' => $templateMessage,
+                    'attachment' => null,
+                    'is_read' => false
+                ]);
+
+                $receiver->notify(new NewMessageNotification($chat));
+            }
+        }
 
         if ($receiver) {
             $selectedChats = Chat::where(function ($query) use ($user, $receiver) {
@@ -50,9 +81,9 @@ class ChatController extends Controller
 
     public function store(Request $request, $receiverId)
     {
-        if (!ProfileController::isProfileComplete(Auth::user())) {
-            return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
-        }
+        // if (!ProfileController::isProfileComplete(Auth::user())) {
+        //     return redirect()->route('profile.edit')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+        // }
 
         $sender = Auth::user();
         $receiver = User::findOrFail($receiverId);

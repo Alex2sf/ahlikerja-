@@ -16,7 +16,6 @@
             <div class="stat-card">
                 <h3>Kontraktor Menunggu</h3>
                 <p>{{ $pendingContractors }}</p>
-                <a href="{{ route('admin.contractors.index') }}" class="btn btn-primary">Lihat</a>
             </div>
             <div class="stat-card">
                 <h3>Total Postingan Tugas</h3>
@@ -115,10 +114,10 @@
             {{-- <a href="{{ route('admin.bookings.index') }}" class="btn btn-secondary mt-3">Lihat Semua</a> --}}
         </div>
 
-        <!-- Tombol Kembali -->
+        {{-- <!-- Tombol Kembali -->
         <div class="back-link">
             <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
-        </div>
+        </div> --}}
     </div>
 
     <style>

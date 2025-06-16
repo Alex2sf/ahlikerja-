@@ -90,14 +90,14 @@
                             <li><strong>Daftar Personel Inti:</strong> Daftar tenaga kerja utama (mandor, tukang ahli, teknisi, dll.) yang dilengkapi dengan sertifikat kompetensi seperti SKA atau SKT untuk meningkatkan kredibilitas.</li>
                             <li><strong>Daftar Peralatan Kerja:</strong> Inventaris alat kerja (scaffolding, concrete mixer, alat bor, dll.) yang dimiliki atau disewa, disertai bukti kepemilikan atau dokumen sewa jika diperlukan.</li>
                             <li><strong>Pengalaman Proyek:</strong> Rekam jejak proyek yang pernah dikerjakan, mencakup nama proyek, lokasi, tahun, nilai kontrak, dan kontak pemberi kerja.</li>
-                            <li><strong>Dokumentasi Proyek:</strong> Foto tahap pre-construction, progres, hingga hasil akhir proyek. Testimoni klien dapat dilampirkan (opsional).</li>
+                            <li><strong>Portofolio:</strong> Foto tahap pre-construction, progres, hingga hasil akhir proyek. Testimoni klien dapat dilampirkan (opsional).</li>
                             <li><strong>Formulir Penawaran:</strong> Dokumen untuk tender, berisi penawaran teknis (metodologi, jadwal, tenaga kerja, alat) dan harga sesuai ketentuan pemberi proyek.</li>
                             <li><strong>Surat Pernyataan Kebenaran Dokumen:</strong> Surat resmi yang menyatakan semua dokumen yang diajukan sah, ditandatangani pimpinan perusahaan dengan stempel resmi.</li>
                         </ul>
                     </div>
 
                     <!-- Input Dokumen Pendukung -->
-                    <label for="dokumen_pendukung">Dokumen Pendukung (unggah multiple):</label>
+                    <label for="dokumen_pendukung">Dokumen Pendukung (unggah multiple, maks 2MB):</label>
                     <input type="file" name="dokumen_pendukung[]" id="dokumen_pendukung" multiple>
                     {{-- @if ($profile->dokumen_pendukung && count($profile->dokumen_pendukung) > 0)
                         <h4>Dokumen Pendukung Saat Ini:</h4>
@@ -113,7 +113,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="portofolio">Portofolio (unggah multiple):</label>
+                    <label for="portofolio">Portofolio (unggah multiple, maks 2MB):</label>
                     <input type="file" name="portofolio[]" id="portofolio" multiple>
                     {{-- @if ($profile->portofolio && count($profile->portofolio) > 0)
                         <h4>Portofolio Saat Ini:</h4>
@@ -156,7 +156,6 @@
                             <li><strong>SKT (Surat Keterangan Terdaftar Pajak):</strong> Bukti pendaftaran aktif perusahaan di kantor pajak.</li>
                             <li><strong>SBU (Sertifikat Badan Usaha):</strong> Sertifikat untuk perusahaan jasa konstruksi, menunjukkan klasifikasi dan kualifikasi usaha.</li>
                             <li><strong>IUJK (Izin Usaha Jasa Konstruksi):</strong> Izin resmi dari pemerintah daerah untuk perusahaan jasa konstruksi.</li>
-                            <li><strong>TDP (Nomor Induk Perusahaan Lama):</strong> Kini digantikan oleh NIB, sebelumnya wajib dimiliki setiap badan usaha.</li>
                         </ul>
                     </div>
 
@@ -180,14 +179,18 @@
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="submit"
+                    class="btn"
+                    style="background-color: #8B4513; color: white; border: none; padding: 12px 24px; font-size: 18px; border-radius: 6px;">
+                    Simpan
+                </button>
                 </div>
             </form>
 
             <!-- Tombol Kembali -->
-            <div class="back-link">
+            {{-- <div class="back-link">
                 <a href="{{ route('home') }}" class="btn btn-secondary">Kembali ke Home</a>
-            </div>
+            </div> --}}
         </div>
     </div>
 
@@ -423,4 +426,64 @@
             }
         }
     </style>
+
+    <script>
+    // Validasi ukuran file sebelum submit
+    document.querySelector('.edit-form').addEventListener('submit', function(event) {
+        const fotoProfileInput = document.querySelector('input[name="foto_profile"]');
+        const dokumenPendukungInput = document.querySelector('input[name="dokumen_pendukung[]"]');
+        const portofolioInput = document.querySelector('input[name="portofolio[]"]');
+        const legalitasInput = document.querySelector('input[name="legalitas[]"]');
+
+        const maxFotoProfileSize = 2 * 1024 * 1024; // 2MB dalam bytes
+        const maxDokumenPendukungSize = 2 * 1024 * 1024; // 2MB dalam bytes
+        const maxPortofolioSize = 2 * 1024 * 1024; // 2MB dalam bytes
+        const maxLegalitasSize = 5 * 1024 * 1024; // 5MB dalam bytes
+        let hasError = false;
+
+        // Validasi Foto Profil
+        if (fotoProfileInput.files.length > 0 && fotoProfileInput.files[0].size > maxFotoProfileSize) {
+            alert('Ukuran foto profil melebihi 2MB. Silakan pilih file yang lebih kecil.');
+            hasError = true;
+        }
+
+        // Validasi Dokumen Pendukung
+        if (dokumenPendukungInput.files.length > 0) {
+            for (let file of dokumenPendukungInput.files) {
+                if (file.size > maxDokumenPendukungSize) {
+                    alert('Ukuran salah satu dokumen pendukung melebihi 2MB. Silakan pilih file yang lebih kecil.');
+                    hasError = true;
+                    break;
+                }
+            }
+        }
+
+        // Validasi Portofolio
+        if (portofolioInput.files.length > 0) {
+            for (let file of portofolioInput.files) {
+                if (file.size > maxPortofolioSize) {
+                    alert('Ukuran salah satu portofolio melebihi 2MB. Silakan pilih file yang lebih kecil.');
+                    hasError = true;
+                    break;
+                }
+            }
+        }
+
+        // Validasi Legalitas
+        if (legalitasInput.files.length > 0) {
+            for (let file of legalitasInput.files) {
+                if (file.size > maxLegalitasSize) {
+                    alert('Ukuran salah satu dokumen legalitas melebihi 5MB. Silakan pilih file yang lebih kecil.');
+                    hasError = true;
+                    break;
+                }
+            }
+        }
+
+        // Jika ada error, batalkan submit
+        if (hasError) {
+            event.preventDefault();
+        }
+    });
+</script>
 @endsection
